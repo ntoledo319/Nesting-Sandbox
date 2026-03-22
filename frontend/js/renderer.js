@@ -234,12 +234,15 @@ class Renderer {
      * @returns {string} HTML string
      */
     renderHistoryItem(run) {
+        const modeLabels = { solve: 'Solve', explore: 'Explore', freeform: 'Freeform' };
+        const mode = run.mode || 'solve';
         return `
             <label class="history-item" data-total-cost="${run.total_cost || 0}">
                 <input type="checkbox" value="${escapeHtml(run.run_id)}">
                 <div class="history-item-info">
                     <div class="history-item-question">${escapeHtml(truncate(run.question, 120))}</div>
                     <div class="history-item-meta">
+                        <span class="results-mode-badge mode-badge-${mode}" style="font-size:0.6rem;padding:1px 6px;">${modeLabels[mode] || mode}</span>
                         ${formatCost(run.total_cost)} · ${run.completed_at ? new Date(run.completed_at).toLocaleDateString() : ''}
                         ${run.specialists && run.specialists.length ? ' · ' + run.specialists.length + ' specialists' : ''}
                     </div>

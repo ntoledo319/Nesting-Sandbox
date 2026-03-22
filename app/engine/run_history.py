@@ -50,6 +50,7 @@ class RunHistory:
             data = {
                 "run_id": run_state.run_id,
                 "question": run_state.config.question,
+                "mode": run_state.config.mode,
                 "completed_at": datetime.now(timezone.utc).isoformat() + "Z",
                 "total_cost": round(cost_tracker.total_cost, 4) if cost_tracker else 0,
                 "specialists": [s.name for s in run_state.config.specialists],
@@ -107,6 +108,7 @@ class RunHistory:
                 runs.append({
                     "run_id": data["run_id"],
                     "question": data["question"][:200],
+                    "mode": data.get("mode", "solve"),
                     "completed_at": data.get("completed_at", ""),
                     "total_cost": data.get("total_cost", 0),
                     "specialists": data.get("specialists", []),
