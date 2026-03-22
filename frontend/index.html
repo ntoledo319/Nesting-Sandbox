@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Nesting Sandbox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/reset.css">
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/layout.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/visualization.css">
+    <link rel="stylesheet" href="/css/animations.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <span class="logo">&loz;</span>
+                <h1 class="app-title">NESTING SANDBOX</h1>
+            </div>
+            <div class="header-right">
+                <div class="api-key-container">
+                    <input type="password" id="apiKeyInput" placeholder="OpenAI API Key (optional)" class="input-subtle">
+                    <button id="apiKeyToggle" class="btn-icon" title="Toggle visibility">&#x1F441;</button>
+                </div>
+                <span id="headerCost" class="header-cost hidden"></span>
+                <button id="headerStop" class="btn-danger hidden">&#x25A0; Stop</button>
+            </div>
+        </header>
+
+        <!-- Setup State -->
+        <main id="setupView" class="view view-setup">
+            <div class="setup-container">
+                <!-- Question -->
+                <div class="setup-section fade-in" style="--delay: 0">
+                    <label class="section-label">What's the question?</label>
+                    <textarea id="questionInput" class="textarea-main" placeholder="Ask something conventionally impossible..." rows="4"></textarea>
+                </div>
+
+                <!-- Documents -->
+                <div class="setup-section fade-in" style="--delay: 1">
+                    <label class="section-label">Supporting Documents</label>
+                    <div id="dropZone" class="drop-zone">
+                        <div class="drop-zone-content">
+                            <span class="drop-icon">&#x1F4CE;</span>
+                            <span>Drop documents here or click to upload</span>
+                        </div>
+                        <input type="file" id="fileInput" multiple hidden>
+                    </div>
+                    <div id="fileList" class="file-list"></div>
+                </div>
+
+                <!-- Specialists -->
+                <div class="setup-section fade-in" style="--delay: 2">
+                    <div class="section-header">
+                        <label class="section-label">SPECIALISTS</label>
+                        <button id="addSpecialist" class="btn-secondary btn-sm">+ Add</button>
+                    </div>
+                    <div id="specialistList" class="specialist-grid"></div>
+                </div>
+
+                <!-- Specialist Modal -->
+                <div id="specialistModal" class="modal hidden">
+                    <div class="modal-content">
+                        <h3 class="modal-title">Add Specialist</h3>
+                        <div class="modal-presets">
+                            <button class="preset-btn" data-name="Legal Implications" data-desc="Analyze legal ramifications, regulatory compliance, precedent cases, and liability concerns">Legal</button>
+                            <button class="preset-btn" data-name="Technical Feasibility" data-desc="Evaluate technical implementation challenges, architectural constraints, and engineering trade-offs">Technical</button>
+                            <button class="preset-btn" data-name="Ethical Concerns" data-desc="Examine ethical implications, societal impact, fairness, bias, and moral considerations">Ethics</button>
+                            <button class="preset-btn" data-name="Historical Precedent" data-desc="Research historical parallels, past attempts, lessons learned, and pattern recognition">Historical</button>
+                            <button class="preset-btn" data-name="Financial Impact" data-desc="Assess economic implications, cost-benefit analysis, market effects, and financial viability">Financial</button>
+                            <button class="preset-btn" data-name="Risk Analysis" data-desc="Identify risks, failure modes, mitigation strategies, and worst-case scenarios">Risk</button>
+                        </div>
+                        <div class="modal-form">
+                            <input type="text" id="specialistName" class="input-field" placeholder="Specialist name">
+                            <textarea id="specialistDesc" class="textarea-field" placeholder="Domain focus description..." rows="3"></textarea>
+                            <div class="modal-actions">
+                                <button id="cancelSpecialist" class="btn-ghost">Cancel</button>
+                                <button id="confirmSpecialist" class="btn-primary">Add Specialist</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget -->
+                <div class="setup-section fade-in" style="--delay: 3">
+                    <label class="section-label">BUDGET</label>
+                    <div class="budget-slider-container">
+                        <span class="budget-label">$1</span>
+                        <input type="range" id="budgetSlider" min="1" max="50" value="10" step="0.5" class="budget-slider">
+                        <span class="budget-label">$50</span>
+                        <span id="budgetValue" class="budget-value">$10.00</span>
+                    </div>
+                </div>
+
+                <!-- Estimate -->
+                <div class="setup-section fade-in" style="--delay: 4">
+                    <div id="estimateCard" class="estimate-card hidden">
+                        <h3 class="estimate-title">Pre-Run Estimate</h3>
+                        <div id="estimateLoading" class="estimate-loading hidden">
+                            <div class="shimmer-bar"></div>
+                            <div class="shimmer-bar short"></div>
+                        </div>
+                        <div id="estimateContent" class="estimate-content hidden">
+                            <div class="estimate-row">
+                                <span>Complexity</span>
+                                <div class="complexity-dots" id="complexityDots"></div>
+                            </div>
+                            <div class="estimate-row">
+                                <span>Est. cycles</span>
+                                <span id="estCycles" class="mono">--</span>
+                            </div>
+                            <div class="estimate-row">
+                                <span>Est. cost</span>
+                                <span id="estCost" class="mono">--</span>
+                            </div>
+                            <div id="estimateWarnings" class="estimate-warnings"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Launch Button -->
+                <div class="setup-section fade-in" style="--delay: 5">
+                    <button id="launchBtn" class="btn-launch" disabled>
+                        <span class="launch-icon">&#x25B6;</span>
+                        <span>Launch Sandbox</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Running State -->
+        <main id="runningView" class="view view-running hidden">
+            <div class="running-layout">
+                <!-- Left Panel: Visualization + Cost -->
+                <div class="panel-left">
+                    <div class="viz-section">
+                        <h2 class="panel-title">NESTED BOX VISUALIZATION</h2>
+                        <div id="boxVisualization" class="box-viz-container">
+                            <!-- Dynamically populated nested boxes -->
+                        </div>
+                    </div>
+                    <div class="cost-section">
+                        <h2 class="panel-title">COST TRACKER</h2>
+                        <div class="cost-summary">
+                            <div class="cost-main">
+                                <span id="costCurrent" class="cost-amount">$0.00</span>
+                                <span class="cost-separator">/</span>
+                                <span id="costBudget" class="cost-budget">$10.00</span>
+                            </div>
+                            <span id="costPct" class="cost-pct">0%</span>
+                        </div>
+                        <div class="cost-progress">
+                            <div id="costBar" class="cost-bar" style="width: 0%"></div>
+                        </div>
+                        <div class="cost-details">
+                            <div class="cost-detail-row">
+                                <span>Burn rate</span>
+                                <span id="burnRate" class="mono">$0.00/min</span>
+                            </div>
+                            <div class="cost-detail-row">
+                                <span>Projected</span>
+                                <span id="projectedCost" class="mono">$0.00</span>
+                            </div>
+                        </div>
+                        <div id="boxCostBars" class="box-cost-bars"></div>
+                        <div id="concludeBanner" class="conclude-banner hidden">
+                            Approaching budget -- boxes wrapping up
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Live Feed -->
+                <div class="panel-right">
+                    <div class="feed-header">
+                        <h2 class="panel-title">LIVE FEED</h2>
+                        <div id="feedFilters" class="feed-filters"></div>
+                    </div>
+                    <div id="liveFeed" class="live-feed"></div>
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <div id="statusBar" class="status-bar">
+                <span id="statusText">Initializing...</span>
+            </div>
+        </main>
+
+        <!-- Results State -->
+        <main id="resultsView" class="view view-results hidden">
+            <div class="results-header">
+                <div class="results-summary">
+                    <h2>RUN COMPLETE</h2>
+                    <div id="resultsSummaryStats" class="results-stats"></div>
+                </div>
+                <div class="results-actions">
+                    <button id="newRunBtn" class="btn-secondary">New Run</button>
+                    <button id="downloadAllBtn" class="btn-primary">Download All</button>
+                </div>
+            </div>
+            <div id="reportCards" class="report-cards"></div>
+        </main>
+    </div>
+
+    <script src="/js/utils.js"></script>
+    <script src="/js/websocket.js"></script>
+    <script src="/js/cost-display.js"></script>
+    <script src="/js/visualization.js"></script>
+    <script src="/js/renderer.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,447 @@
+/* ============================================
+   Animations — Keyframes & Animation Classes
+   The Nesting Sandbox
+   ============================================ */
+
+/* ================================================
+   FADE-IN — Staggered entrance with --delay var
+   ================================================ */
+
+.fade-in {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fade-in-up 500ms var(--ease-out) forwards;
+    animation-delay: calc(var(--delay, 0) * 80ms);
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Simple fade */
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+
+/* ================================================
+   PULSE-BORDER — Gentle border glow pulse
+   ================================================ */
+
+.pulse-border {
+    animation: pulse-border 3s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% {
+        border-color: var(--border-default);
+        box-shadow: none;
+    }
+    50% {
+        border-color: var(--specialist-border);
+        box-shadow: 0 0 20px var(--specialist-glow);
+    }
+}
+
+/* Colored variants */
+.pulse-border-coral {
+    animation: pulse-border-coral 3s ease-in-out infinite;
+}
+
+@keyframes pulse-border-coral {
+    0%, 100% {
+        border-color: var(--box1-border);
+        box-shadow: 0 0 10px transparent;
+    }
+    50% {
+        border-color: var(--box1-color);
+        box-shadow: 0 0 24px var(--box1-glow);
+    }
+}
+
+.pulse-border-teal {
+    animation: pulse-border-teal 3s ease-in-out infinite;
+}
+
+@keyframes pulse-border-teal {
+    0%, 100% {
+        border-color: var(--box2-border);
+        box-shadow: 0 0 10px transparent;
+    }
+    50% {
+        border-color: var(--box2-color);
+        box-shadow: 0 0 24px var(--box2-glow);
+    }
+}
+
+
+/* ================================================
+   PULSE-FAST — Faster pulse for active thinking
+   ================================================ */
+
+.pulse-fast {
+    animation: pulse-fast 1s ease-in-out infinite;
+}
+
+@keyframes pulse-fast {
+    0%, 100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.3);
+    }
+}
+
+
+/* ================================================
+   RIPPLE — Brief outward ring for event publishing
+   ================================================ */
+
+.ripple {
+    animation: ripple 600ms ease-out forwards;
+}
+
+@keyframes ripple {
+    0% {
+        box-shadow: 0 0 0 0 rgba(127, 119, 221, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 0 12px rgba(127, 119, 221, 0);
+    }
+}
+
+/* Source-colored ripples */
+.ripple-coral {
+    animation: ripple-coral 600ms ease-out forwards;
+}
+
+@keyframes ripple-coral {
+    0% {
+        box-shadow: 0 0 0 0 rgba(232, 89, 60, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 0 12px rgba(232, 89, 60, 0);
+    }
+}
+
+.ripple-teal {
+    animation: ripple-teal 600ms ease-out forwards;
+}
+
+@keyframes ripple-teal {
+    0% {
+        box-shadow: 0 0 0 0 rgba(29, 158, 117, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 0 12px rgba(29, 158, 117, 0);
+    }
+}
+
+
+/* ================================================
+   SHIMMER — Loading skeleton shimmer
+   ================================================ */
+
+.shimmer {
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+
+/* ================================================
+   BREATHE — Ambient breathing for nested boxes
+   ================================================ */
+
+.breathe {
+    animation: breathe 4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+    0%, 100% {
+        opacity: 0.85;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Breathe with subtle scale */
+.breathe-scale {
+    animation: breathe-scale 5s ease-in-out infinite;
+}
+
+@keyframes breathe-scale {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: scale(1.005);
+        opacity: 1;
+    }
+}
+
+
+/* ================================================
+   COUNT-UP — Smooth number transitions
+   ================================================ */
+
+.count-up {
+    animation: count-up-flash 400ms ease-out;
+}
+
+@keyframes count-up-flash {
+    0% {
+        color: #fff;
+        text-shadow: 0 0 8px currentColor;
+    }
+    100% {
+        color: inherit;
+        text-shadow: none;
+    }
+}
+
+/* Cost update highlight */
+.cost-update {
+    animation: cost-update-flash 300ms ease-out;
+}
+
+@keyframes cost-update-flash {
+    0% {
+        color: #fff;
+        transform: scale(1.05);
+    }
+    100% {
+        color: var(--cost-color);
+        transform: scale(1);
+    }
+}
+
+
+/* ================================================
+   SLIDE-IN-BOTTOM — For new feed items
+   ================================================ */
+
+.slide-in-bottom {
+    animation: slide-in-bottom 300ms var(--ease-out);
+}
+
+@keyframes slide-in-bottom {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Slide in from left */
+.slide-in-left {
+    animation: slide-in-left 300ms var(--ease-out);
+}
+
+@keyframes slide-in-left {
+    from {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Slide in from right */
+.slide-in-right {
+    animation: slide-in-right 300ms var(--ease-out);
+}
+
+@keyframes slide-in-right {
+    from {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+
+/* ================================================
+   SPIN — For loading states
+   ================================================ */
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+
+/* ================================================
+   THINKING DOTS — Ellipsis animation
+   ================================================ */
+
+.thinking-dots::after {
+    content: '';
+    animation: thinking-dots 1.5s steps(4) infinite;
+}
+
+@keyframes thinking-dots {
+    0%   { content: ''; }
+    25%  { content: '.'; }
+    50%  { content: '..'; }
+    75%  { content: '...'; }
+    100% { content: ''; }
+}
+
+
+/* ================================================
+   GLOW PULSE — For active status indicators
+   ================================================ */
+
+.glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+    0%, 100% {
+        box-shadow: 0 0 4px currentColor;
+    }
+    50% {
+        box-shadow: 0 0 12px currentColor, 0 0 24px currentColor;
+    }
+}
+
+
+/* ================================================
+   TYPEWRITER — Progressive text reveal
+   ================================================ */
+
+.typewriter {
+    overflow: hidden;
+    border-right: 2px solid var(--text-tertiary);
+    white-space: nowrap;
+    animation:
+        typewriter-reveal 1s steps(20) forwards,
+        typewriter-blink 700ms step-end infinite;
+}
+
+@keyframes typewriter-reveal {
+    from { max-width: 0; }
+    to { max-width: 100%; }
+}
+
+@keyframes typewriter-blink {
+    from, to { border-color: transparent; }
+    50% { border-color: var(--text-tertiary); }
+}
+
+
+/* ================================================
+   SHAKE — Error feedback
+   ================================================ */
+
+.shake {
+    animation: shake 400ms ease-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(3px); }
+}
+
+
+/* ================================================
+   SCALE POP — Celebratory micro-interaction
+   ================================================ */
+
+.scale-pop {
+    animation: scale-pop 300ms var(--ease-out);
+}
+
+@keyframes scale-pop {
+    0% { transform: scale(0.9); opacity: 0; }
+    60% { transform: scale(1.03); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+
+/* ================================================
+   REDUCED MOTION — Respect user preferences
+   ================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .fade-in {
+        opacity: 1;
+        transform: none;
+    }
+
+    .shimmer-bar {
+        animation: none;
+        background: var(--bg-elevated);
+    }
+
+    .thinking-dots::after {
+        content: '...';
+        animation: none;
+    }
+
+    .breathe,
+    .breathe-scale,
+    .pulse-border,
+    .pulse-fast,
+    .glow-pulse {
+        animation: none;
+    }
+
+    .viz-box1.thinking,
+    .viz-box2.thinking {
+        animation: none;
+    }
+
+    .viz-specialist-ring.active {
+        animation: none;
+    }
+}

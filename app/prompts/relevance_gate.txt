@@ -1,0 +1,5 @@
+Domain: {domain}
+
+Which of these findings are relevant to this domain? Return ONLY the numbers (comma-separated) of relevant items, or 'none'.
+
+{event_summaries}

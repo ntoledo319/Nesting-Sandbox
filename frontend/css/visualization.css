@@ -1,0 +1,406 @@
+/* ============================================
+   Visualization — Nested Box CSS Rendering
+   The Nesting Sandbox
+
+   Structure (outside-in):
+   - Specialist ring (purple, dashed) — outermost
+   - Box 2 (teal) — wraps Box 1
+   - Box 1 (coral) — innermost, the core
+   ============================================ */
+
+.box-viz-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    min-height: 320px;
+    position: relative;
+}
+
+/* ---- Specialist Ring (Outermost) ---- */
+
+.viz-specialist-ring {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 1.5 / 1;
+    border: 2px dashed var(--specialist-border);
+    border-radius: var(--radius-xl);
+    background: var(--specialist-bg);
+    animation: breathe 4s ease-in-out infinite;
+}
+
+.viz-specialist-ring.active {
+    border-color: var(--specialist-color);
+    box-shadow: 0 0 30px var(--specialist-glow);
+    animation: pulse-border-specialist 2s ease-in-out infinite;
+}
+
+/* Specialist name pills positioned around the ring */
+.viz-specialist-pill {
+    position: absolute;
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--specialist-color);
+    background: var(--bg-deep);
+    border: 1px solid var(--specialist-border);
+    border-radius: 100px;
+    white-space: nowrap;
+    z-index: 2;
+    transition: all var(--duration-normal) var(--ease-out);
+}
+
+.viz-specialist-pill.active {
+    color: #fff;
+    background: var(--specialist-color);
+    border-color: var(--specialist-color);
+    box-shadow: 0 0 12px var(--specialist-glow);
+}
+
+/* Position pills around the ring edges */
+.viz-specialist-pill:nth-child(1) { top: -10px; left: 20%; }
+.viz-specialist-pill:nth-child(2) { top: -10px; right: 20%; }
+.viz-specialist-pill:nth-child(3) { right: -6px; top: 30%; transform: translateX(50%); }
+.viz-specialist-pill:nth-child(4) { right: -6px; bottom: 30%; transform: translateX(50%); }
+.viz-specialist-pill:nth-child(5) { bottom: -10px; left: 20%; }
+.viz-specialist-pill:nth-child(6) { bottom: -10px; right: 20%; }
+.viz-specialist-pill:nth-child(7) { left: -6px; top: 30%; transform: translateX(-50%); }
+.viz-specialist-pill:nth-child(8) { left: -6px; bottom: 30%; transform: translateX(-50%); }
+
+
+/* ---- Box 2 (Teal / Outer Box) ---- */
+
+.viz-box2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 72%;
+    aspect-ratio: 1.4 / 1;
+    border: 2px solid var(--box2-border);
+    border-radius: var(--radius-lg);
+    background: var(--box2-bg);
+    position: relative;
+    transition: all var(--duration-normal) var(--ease-out);
+}
+
+.viz-box2.thinking {
+    border-color: var(--box2-color);
+    box-shadow:
+        0 0 20px var(--box2-glow),
+        inset 0 0 30px rgba(29, 158, 117, 0.05);
+    animation: pulse-border-box2 2.5s ease-in-out infinite;
+}
+
+.viz-box2.complete {
+    border-color: var(--box2-color);
+    opacity: 0.7;
+}
+
+.viz-box2-label {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--box2-color);
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.viz-box2-status {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.viz-box2-cycle {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--text-tertiary);
+}
+
+.viz-box2-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--box2-color);
+    opacity: 0.4;
+}
+
+.viz-box2.thinking .viz-box2-indicator {
+    opacity: 1;
+    animation: pulse-fast 1s ease-in-out infinite;
+}
+
+.viz-box2.complete .viz-box2-indicator {
+    background: var(--success);
+    opacity: 1;
+}
+
+
+/* ---- Box 1 (Coral / Inner Box) ---- */
+
+.viz-box1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 65%;
+    aspect-ratio: 1.3 / 1;
+    border: 2px solid var(--box1-border);
+    border-radius: var(--radius-md);
+    background: var(--box1-bg);
+    position: relative;
+    transition: all var(--duration-normal) var(--ease-out);
+}
+
+.viz-box1.thinking {
+    border-color: var(--box1-color);
+    box-shadow:
+        0 0 20px var(--box1-glow),
+        inset 0 0 30px rgba(232, 89, 60, 0.05);
+    animation: pulse-border-box1 2s ease-in-out infinite;
+}
+
+.viz-box1.complete {
+    border-color: var(--box1-color);
+    opacity: 0.7;
+}
+
+.viz-box1-label {
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--box1-color);
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.viz-box1-status {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.viz-box1-cycle {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--text-tertiary);
+}
+
+.viz-box1-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--box1-color);
+    opacity: 0.4;
+}
+
+.viz-box1.thinking .viz-box1-indicator {
+    opacity: 1;
+    animation: pulse-fast 0.8s ease-in-out infinite;
+}
+
+.viz-box1.complete .viz-box1-indicator {
+    background: var(--success);
+    opacity: 1;
+}
+
+
+/* ---- Center Content (inside Box 1) ---- */
+
+.viz-center-content {
+    text-align: center;
+    padding: 8px;
+}
+
+.viz-center-icon {
+    font-size: 1.4rem;
+    margin-bottom: 4px;
+    opacity: 0.6;
+}
+
+.viz-center-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-tertiary);
+    letter-spacing: 0.05em;
+}
+
+.viz-center-label.active {
+    color: var(--box1-color);
+}
+
+
+/* ---- Data Flow Indicators ---- */
+
+.viz-data-flow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    top: 0;
+    left: 0;
+}
+
+/* Animated dots flowing between boxes */
+.viz-flow-dot {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    opacity: 0;
+}
+
+.viz-flow-dot.outward {
+    animation: flow-outward 2s ease-in-out infinite;
+}
+
+.viz-flow-dot.inward {
+    animation: flow-inward 2s ease-in-out infinite;
+}
+
+.viz-flow-dot.box1 { background: var(--box1-color); }
+.viz-flow-dot.box2 { background: var(--box2-color); }
+.viz-flow-dot.specialist { background: var(--specialist-color); }
+
+
+/* ---- Ripple Effect on Event Publish ---- */
+
+.viz-ripple {
+    position: absolute;
+    border-radius: inherit;
+    border: 1px solid;
+    opacity: 0;
+    pointer-events: none;
+    animation: viz-ripple-expand 600ms ease-out forwards;
+}
+
+.viz-ripple.box1 {
+    border-color: var(--box1-color);
+    inset: -4px;
+}
+
+.viz-ripple.box2 {
+    border-color: var(--box2-color);
+    inset: -4px;
+}
+
+.viz-ripple.specialist {
+    border-color: var(--specialist-color);
+    inset: -4px;
+}
+
+
+/* ---- Idle State ---- */
+
+.box-viz-container.idle .viz-specialist-ring {
+    border-color: var(--border-subtle);
+    background: transparent;
+}
+
+.box-viz-container.idle .viz-box2 {
+    border-color: var(--border-subtle);
+    background: transparent;
+}
+
+.box-viz-container.idle .viz-box1 {
+    border-color: var(--border-subtle);
+    background: transparent;
+}
+
+
+/* ---- Keyframes specific to visualization ---- */
+
+@keyframes pulse-border-box1 {
+    0%, 100% {
+        box-shadow: 0 0 15px var(--box1-glow), inset 0 0 20px rgba(232, 89, 60, 0.03);
+    }
+    50% {
+        box-shadow: 0 0 30px var(--box1-glow), inset 0 0 40px rgba(232, 89, 60, 0.06);
+    }
+}
+
+@keyframes pulse-border-box2 {
+    0%, 100% {
+        box-shadow: 0 0 15px var(--box2-glow), inset 0 0 20px rgba(29, 158, 117, 0.03);
+    }
+    50% {
+        box-shadow: 0 0 30px var(--box2-glow), inset 0 0 40px rgba(29, 158, 117, 0.06);
+    }
+}
+
+@keyframes pulse-border-specialist {
+    0%, 100% {
+        box-shadow: 0 0 15px var(--specialist-glow);
+        border-color: var(--specialist-color);
+    }
+    50% {
+        box-shadow: 0 0 30px var(--specialist-glow);
+        border-color: rgba(127, 119, 221, 0.6);
+    }
+}
+
+@keyframes flow-outward {
+    0% {
+        opacity: 0;
+        transform: translateY(0);
+    }
+    20% {
+        opacity: 0.8;
+    }
+    80% {
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+}
+
+@keyframes flow-inward {
+    0% {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+    20% {
+        opacity: 0.8;
+    }
+    80% {
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(0);
+    }
+}
+
+@keyframes viz-ripple-expand {
+    0% {
+        opacity: 0.6;
+        inset: 0;
+    }
+    100% {
+        opacity: 0;
+        inset: -16px;
+    }
+}

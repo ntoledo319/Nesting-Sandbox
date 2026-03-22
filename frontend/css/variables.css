@@ -1,0 +1,80 @@
+/* ============================================
+   Variables — Design Tokens
+   The Nesting Sandbox
+   ============================================ */
+
+:root {
+    /* Backgrounds */
+    --bg-deep: #0a0a0f;
+    --bg-surface: #12121a;
+    --bg-elevated: #1a1a26;
+    --bg-hover: #22222e;
+
+    /* Borders */
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-default: rgba(255, 255, 255, 0.10);
+    --border-strong: rgba(255, 255, 255, 0.18);
+
+    /* Text */
+    --text-primary: #e8e6e3;
+    --text-secondary: #9d9b97;
+    --text-tertiary: #6b6966;
+
+    /* Box 1 — Coral / Inner */
+    --box1-color: #e8593c;
+    --box1-bg: rgba(232, 89, 60, 0.08);
+    --box1-border: rgba(232, 89, 60, 0.25);
+    --box1-glow: rgba(232, 89, 60, 0.15);
+
+    /* Box 2 — Teal / Outer */
+    --box2-color: #1d9e75;
+    --box2-bg: rgba(29, 158, 117, 0.08);
+    --box2-border: rgba(29, 158, 117, 0.25);
+    --box2-glow: rgba(29, 158, 117, 0.15);
+
+    /* Specialist — Purple */
+    --specialist-color: #7f77dd;
+    --specialist-bg: rgba(127, 119, 221, 0.08);
+    --specialist-border: rgba(127, 119, 221, 0.25);
+    --specialist-glow: rgba(127, 119, 221, 0.15);
+
+    /* Semantic Colors */
+    --cost-color: #ef9f27;
+    --success: #5dca7a;
+    --warning: #ef9f27;
+    --danger: #e24b4a;
+
+    /* Typography */
+    --font-display: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+    /* Easing */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+    /* Durations */
+    --duration-fast: 150ms;
+    --duration-normal: 300ms;
+    --duration-slow: 500ms;
+
+    /* Radii */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --shadow-glow-box1: 0 0 20px var(--box1-glow);
+    --shadow-glow-box2: 0 0 20px var(--box2-glow);
+    --shadow-glow-specialist: 0 0 20px var(--specialist-glow);
+
+    /* Z-index layers */
+    --z-base: 1;
+    --z-elevated: 10;
+    --z-overlay: 100;
+    --z-modal: 1000;
+}
