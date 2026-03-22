@@ -115,6 +115,8 @@ function animateNumber(element, from, to, duration = 500, formatter = formatCost
 function getBoxColorClass(boxId) {
     if (boxId === 'box1') return 'box1';
     if (boxId === 'box2') return 'box2';
+    if (boxId === 'user') return 'user';
+    if (boxId.startsWith('system:')) return 'system';
     return 'specialist';
 }
 
@@ -124,11 +126,8 @@ function getBoxColorClass(boxId) {
  * @returns {string}
  */
 function getBoxDisplayName(boxId) {
-    if (boxId === 'box1') return 'Box 1 \u2014 Solver';
-    if (boxId === 'box2') return 'Box 2 \u2014 Extrapolator';
-    if (boxId.startsWith('specialist:')) return boxId.replace('specialist:', '');
-    if (boxId.startsWith('gate:')) return 'Gate';
-    return boxId;
+    const mode = (typeof App !== 'undefined' && App.mode) ? App.mode : 'solve';
+    return getBoxDisplayNameForMode(boxId, mode);
 }
 
 /**
@@ -139,7 +138,14 @@ function getBoxDisplayName(boxId) {
 function getBoxShortName(boxId) {
     if (boxId === 'box1') return 'box1';
     if (boxId === 'box2') return 'box2';
+    if (boxId === 'user') return 'you';
+    if (boxId === 'system:conflict_detector') return 'conflict';
+    if (boxId === 'system:debate') return 'debate';
+    if (boxId === 'system:spawn') return 'system';
+    if (boxId === 'system:history') return 'history';
+    if (boxId.startsWith('system:')) return 'system';
     if (boxId.startsWith('specialist:')) return boxId.replace('specialist:', '').toLowerCase().split(' ')[0];
+    if (boxId.startsWith('gate:')) return 'gate';
     return boxId;
 }
 
@@ -176,8 +182,84 @@ function eventTypeLabel(type) {
         question: 'Question',
         connection: 'Connection',
         done: 'Done',
+        // Explore
+        discovery: 'Discovery',
+        constraint: 'Constraint',
+        approach: 'Approach',
+        failure_analysis: 'Failure Analysis',
+        partial_solution: 'Partial Solution',
+        assumption: 'Assumption',
+        unexpected: 'Unexpected',
+        boundary: 'Boundary',
+        pattern: 'Pattern',
+        frontier: 'Frontier',
+        impossibility_analysis: 'Impossibility Analysis',
+        territory_map: 'Territory Map',
+        emergence: 'Emergence',
+        // Human
+        user_input: 'User Input',
+        // Conflict
+        conflict: 'Conflict',
+        debate_prompt: 'Debate',
+        resolution: 'Resolution',
+        rebuttal: 'Rebuttal',
+        // Spawn
+        spawn_specialist: 'Spawn Request',
+        specialist_spawned: 'Specialist Spawned',
     };
     return labels[type] || type;
+}
+
+/**
+ * Return a CSS class for coloring an event type badge in the feed.
+ * @param {string} type
+ * @returns {string}
+ */
+function eventTypeColorClass(type) {
+    const positive = ['conclusion', 'evidence', 'discovery', 'partial_solution', 'pattern', 'emergence'];
+    const negative = ['dead_end', 'failure_analysis', 'constraint', 'impossibility_analysis'];
+    const mapping = ['connection', 'unexpected', 'boundary', 'frontier', 'territory_map'];
+    if (positive.includes(type)) return 'etype-positive';
+    if (negative.includes(type)) return 'etype-negative';
+    if (mapping.includes(type)) return 'etype-mapping';
+    return 'etype-neutral';
+}
+
+/**
+ * Mode-aware display name for a box in reports and headings.
+ * @param {string} boxId
+ * @param {string} mode  'solve' | 'explore' | 'freeform'
+ * @returns {string}
+ */
+function getBoxDisplayNameForMode(boxId, mode) {
+    const names = {
+        solve:    { box1: 'Box 1 \u2014 Solver',      box2: 'Box 2 \u2014 Extrapolator' },
+        explore:  { box1: 'Box 1 \u2014 Explorer',     box2: 'Box 2 \u2014 Cartographer' },
+        freeform: { box1: 'Box 1 \u2014 Analyst',      box2: 'Box 2 \u2014 Meta-Analyst' },
+    };
+    if (boxId === 'box1' || boxId === 'box2') {
+        return (names[mode] || names.solve)[boxId];
+    }
+    if (boxId === 'user') return 'You';
+    if (boxId.startsWith('system:')) return 'System';
+    if (boxId.startsWith('specialist:')) return boxId.replace('specialist:', '');
+    if (boxId.startsWith('gate:')) return 'Gate';
+    return boxId;
+}
+
+/**
+ * Mode-aware short labels for the nested box visualization.
+ * @param {string} boxId
+ * @param {string} mode
+ * @returns {{ label: string, sub: string }}
+ */
+function getBoxVizLabels(boxId, mode) {
+    const labels = {
+        solve:    { box1: { label: 'Box 1', sub: 'Solver' },      box2: { label: 'Box 2', sub: 'Extrapolator' } },
+        explore:  { box1: { label: 'Box 1', sub: 'Explorer' },     box2: { label: 'Box 2', sub: 'Cartographer' } },
+        freeform: { box1: { label: 'Box 1', sub: 'Analyst' },      box2: { label: 'Box 2', sub: 'Meta-Analyst' } },
+    };
+    return (labels[mode] || labels.solve)[boxId] || { label: boxId, sub: '' };
 }
 
 /**

@@ -20,6 +20,9 @@ const App = {
     boxStates: {},
     estimateTimer: null,
     currentReport: null,
+    mode: 'solve', // 'solve' | 'explore' | 'freeform'
+    seedRunIds: [],
+    seedRuns: [],  // Full run data for display
 
     /**
      * Bootstrap the application. Call once after DOMContentLoaded.
@@ -118,6 +121,23 @@ const App = {
             input.type = input.type === 'password' ? 'text' : 'password';
         });
 
+        // Mode selector
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.mode = btn.dataset.mode;
+                // Update placeholder text based on mode
+                const placeholder = {
+                    solve: 'Ask something conventionally impossible...',
+                    explore: 'Pose a problem to explore — the journey IS the output...',
+                    freeform: 'Throw something at the wall and see what sticks...',
+                };
+                document.getElementById('questionInput').placeholder = placeholder[this.mode] || placeholder.solve;
+                this.requestEstimate();
+            });
+        });
+
         // Feed filters (delegated)
         const feedFilters = document.getElementById('feedFilters');
         if (feedFilters) {
@@ -187,10 +207,117 @@ const App = {
                 }
             }
         });
+
+        // User injection (Feature 2)
+        document.getElementById('feedSendBtn')?.addEventListener('click', () => this.injectInput());
+        document.getElementById('feedInput')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.injectInput();
+            }
+        });
+
+        // History modal (Feature 3)
+        document.getElementById('loadHistoryBtn')?.addEventListener('click', () => this.showHistoryModal());
+        document.getElementById('cancelHistory')?.addEventListener('click', () => {
+            document.getElementById('historyModal').classList.add('hidden');
+        });
+        document.getElementById('confirmHistory')?.addEventListener('click', () => this.confirmHistorySelection());
+
+        // Seed run removal (delegated)
+        document.getElementById('seedRunList')?.addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('.seed-remove');
+            if (removeBtn) {
+                const runId = removeBtn.dataset.runId;
+                this.seedRunIds = this.seedRunIds.filter(id => id !== runId);
+                this.seedRuns = this.seedRuns.filter(r => r.run_id !== runId);
+                this.renderSeedRuns();
+            }
+        });
     },
 
     bindSpecialistRemove() {
         // Handled by delegated event above — no-op kept for clarity
+    },
+
+    /* --------------------------------------------------------
+       User Injection
+       -------------------------------------------------------- */
+
+    injectInput() {
+        const input = document.getElementById('feedInput');
+        if (!input) return;
+        const content = input.value.trim();
+        if (!content || !this.ws.connected) return;
+        this.ws.send('user_input', { content });
+        input.value = '';
+    },
+
+    /* --------------------------------------------------------
+       History Modal
+       -------------------------------------------------------- */
+
+    async showHistoryModal() {
+        const modal = document.getElementById('historyModal');
+        const list = document.getElementById('historyList');
+        if (!modal || !list) return;
+
+        list.innerHTML = '<div class="estimate-loading"><div class="shimmer-bar"></div></div>';
+        modal.classList.remove('hidden');
+
+        try {
+            const resp = await fetch('/api/history');
+            if (!resp.ok) { list.innerHTML = '<p style="color:var(--text-tertiary)">No history available.</p>'; return; }
+            const runs = await resp.json();
+
+            if (!runs.length) {
+                list.innerHTML = '<p style="color:var(--text-tertiary)">No previous runs found.</p>';
+                return;
+            }
+
+            list.innerHTML = runs.map(r => this.renderer.renderHistoryItem(r)).join('');
+
+            // Pre-check already selected
+            this.seedRunIds.forEach(id => {
+                const cb = list.querySelector(`input[value="${id}"]`);
+                if (cb) cb.checked = true;
+            });
+        } catch (e) {
+            list.innerHTML = '<p style="color:var(--text-tertiary)">Failed to load history.</p>';
+        }
+    },
+
+    confirmHistorySelection() {
+        const list = document.getElementById('historyList');
+        const modal = document.getElementById('historyModal');
+        if (!list) return;
+
+        const checked = list.querySelectorAll('input[type="checkbox"]:checked');
+        const selectedIds = Array.from(checked).map(cb => cb.value);
+
+        // Fetch summary info for selected runs
+        this.seedRunIds = selectedIds;
+        this.seedRuns = [];
+
+        // Get run info from the DOM
+        checked.forEach(cb => {
+            const item = cb.closest('.history-item');
+            const question = item?.querySelector('.history-item-question')?.textContent || '';
+            const meta = item?.querySelector('.history-item-meta')?.textContent || '';
+            this.seedRuns.push({ run_id: cb.value, question, meta });
+        });
+
+        this.renderSeedRuns();
+        modal.classList.add('hidden');
+    },
+
+    renderSeedRuns() {
+        const container = document.getElementById('seedRunList');
+        if (!container) return;
+        container.innerHTML = '';
+        this.seedRuns.forEach(run => {
+            container.appendChild(this.renderer.renderSeedRunCard(run));
+        });
     },
 
     /* --------------------------------------------------------
@@ -199,6 +326,8 @@ const App = {
 
     bindWSHandlers() {
         this.ws.on('initial_state', (data) => {
+            // Restore mode from server state (handles reconnects)
+            if (data.mode) this.mode = data.mode;
             this.boxStates = data.boxes || {};
             if (data.events) {
                 data.events.forEach(e => this.addEvent(e));
@@ -229,6 +358,13 @@ const App = {
 
         this.ws.on('cost_update', (data) => {
             this.costDisplay.update(data);
+        });
+
+        this.ws.on('box_spawned', (data) => {
+            this.boxStates[data.box_id] = { status: 'waiting', current_cycle: 0 };
+            const boxIds = Object.keys(this.boxStates);
+            this.viz.init(boxIds);
+            this.renderer.renderFeedFilters(boxIds);
         });
 
         this.ws.on('run_complete', (data) => {
@@ -314,6 +450,11 @@ const App = {
                 documents: this.documentTexts,
                 specialists: this.specialists,
                 budget_cap: parseFloat(document.getElementById('budgetSlider').value),
+                mode: this.mode,
+                web_search_enabled: document.getElementById('webSearchToggle')?.checked ?? true,
+                conflict_detection: document.getElementById('conflictToggle')?.checked ?? true,
+                allow_spawning: document.getElementById('spawningToggle')?.checked ?? true,
+                seed_run_ids: this.seedRunIds,
             };
             if (apiKey) body.api_key = apiKey;
 
@@ -351,6 +492,11 @@ const App = {
             documents: this.documentTexts,
             specialists: this.specialists,
             budget_cap: budget,
+            mode: this.mode,
+            web_search_enabled: document.getElementById('webSearchToggle')?.checked ?? true,
+            conflict_detection: document.getElementById('conflictToggle')?.checked ?? true,
+            allow_spawning: document.getElementById('spawningToggle')?.checked ?? true,
+            seed_run_ids: this.seedRunIds,
         };
         if (apiKey) config.api_key = apiKey;
 
@@ -382,8 +528,12 @@ const App = {
             // Connect WebSocket
             this.ws.connect(this.runId);
 
-            // Show stop button and cost
+            // Show stop button, cost, and mode badge
             document.getElementById('headerStop').classList.remove('hidden');
+            const modeBadge = document.getElementById('headerModeBadge');
+            const modeLabels = { solve: 'Solve', explore: 'Explore', freeform: 'Freeform' };
+            modeBadge.textContent = modeLabels[this.mode] || this.mode;
+            modeBadge.className = `header-mode-badge mode-badge-${this.mode}`;
             this.costDisplay.setBudget(budget);
 
         } catch (e) {
@@ -451,11 +601,22 @@ const App = {
         this.events = [];
         this.boxStates = {};
         this.currentReport = null;
+        this.mode = 'solve';
+        this.seedRunIds = [];
+        this.seedRuns = [];
         this.renderer.feedFilter = null;
         this.renderer._fullContent?.clear();
         this.costDisplay.reset();
         document.getElementById('headerStop').classList.add('hidden');
+        document.getElementById('headerModeBadge').className = 'header-mode-badge hidden';
         document.getElementById('liveFeed').innerHTML = '';
+        const seedList = document.getElementById('seedRunList');
+        if (seedList) seedList.innerHTML = '';
+        // Reset mode selector UI
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        const defaultMode = document.querySelector('.mode-btn[data-mode="solve"]');
+        if (defaultMode) defaultMode.classList.add('active');
+        document.getElementById('questionInput').placeholder = 'Ask something conventionally impossible...';
         this.switchView('setup');
     },
 

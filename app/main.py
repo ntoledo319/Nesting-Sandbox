@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from app.routes import runs, ws, reports
+from app.routes import runs, ws, reports, history
 from app.engine.run_manager import RunManager
 
 logging.basicConfig(level=logging.INFO)
@@ -16,6 +16,7 @@ run_manager = RunManager()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.run_manager = run_manager
+    app.state.run_history = run_manager.run_history
     logger.info("Nesting Sandbox started")
     yield
 
@@ -34,6 +35,7 @@ app.add_middleware(
 # Include routers
 app.include_router(runs.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
+app.include_router(history.router, prefix="/api")
 app.include_router(ws.router)
 
 # Mount frontend static files (must be last)

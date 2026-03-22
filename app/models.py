@@ -16,6 +16,19 @@ class RunConfig(BaseModel):
     budget_cap: float = Field(default=10.0, gt=0)  # USD
     max_cycles: int = Field(default=50, ge=1, le=200)  # Safety limit even with budget
     api_key: Optional[str] = None  # Optional per-run API key
+    mode: str = Field(default="solve")  # "solve" | "explore" | "freeform"
+    web_search_enabled: bool = True
+    seed_run_ids: list[str] = []
+    conflict_detection: bool = True
+    allow_spawning: bool = True
+    max_total_boxes: int = Field(default=10, ge=2, le=20)
+
+    @field_validator('mode')
+    @classmethod
+    def validate_mode(cls, v):
+        if v not in ("solve", "explore", "freeform"):
+            raise ValueError('Mode must be "solve", "explore", or "freeform"')
+        return v
 
     @field_validator('specialists')
     @classmethod

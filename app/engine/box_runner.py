@@ -41,10 +41,32 @@ MODEL_CONTEXT_LIMITS: dict[str, int] = {
 _CHARS_PER_TOKEN = 4
 
 # Regex that extracts labeled findings from a model response.
+# Covers all modes: solve, explore, freeform, conflict/debate, and dynamic spawning.
 FINDING_PATTERN = re.compile(
-    r"\[(HYPOTHESIS|EVIDENCE|CONCLUSION|DEAD_END|QUESTION|CONNECTION|DONE)\]"
+    r"\[("
+    # Core solve
+    r"HYPOTHESIS|EVIDENCE|CONCLUSION|DEAD_END|QUESTION|CONNECTION"
+    # Explore
+    r"|DISCOVERY|CONSTRAINT|APPROACH|FAILURE_ANALYSIS|PARTIAL_SOLUTION"
+    r"|ASSUMPTION|UNEXPECTED|BOUNDARY|PATTERN|FRONTIER"
+    r"|IMPOSSIBILITY_ANALYSIS|TERRITORY_MAP|EMERGENCE"
+    # Conflict/debate
+    r"|CONFLICT|DEBATE_PROMPT|RESOLUTION|REBUTTAL"
+    # Dynamic spawning
+    r"|SPAWN_SPECIALIST|SPECIALIST_SPAWNED"
+    # User
+    r"|USER_INPUT"
+    # Meta
+    r"|DONE"
+    r")\]"
     r"\s*(.*?)"
-    r"(?=\[(?:HYPOTHESIS|EVIDENCE|CONCLUSION|DEAD_END|QUESTION|CONNECTION|DONE)\]|\Z)",
+    r"(?=\[(?:HYPOTHESIS|EVIDENCE|CONCLUSION|DEAD_END|QUESTION|CONNECTION"
+    r"|DISCOVERY|CONSTRAINT|APPROACH|FAILURE_ANALYSIS|PARTIAL_SOLUTION"
+    r"|ASSUMPTION|UNEXPECTED|BOUNDARY|PATTERN|FRONTIER"
+    r"|IMPOSSIBILITY_ANALYSIS|TERRITORY_MAP|EMERGENCE"
+    r"|CONFLICT|DEBATE_PROMPT|RESOLUTION|REBUTTAL"
+    r"|SPAWN_SPECIALIST|SPECIALIST_SPAWNED"
+    r"|USER_INPUT|DONE)\]|\Z)",
     re.DOTALL,
 )
 
@@ -73,6 +95,8 @@ class BoxRunner:
         gate_model: str = "gpt-4.1-nano",
         max_cycles: int = 50,
         total_boxes: int = 2,
+        mode: str = "solve",
+        tools_enabled: bool = False,
     ) -> None:
         self.box_id = box_id
         self.model = model
@@ -87,6 +111,8 @@ class BoxRunner:
         self.gate_model = gate_model
         self.max_cycles = max_cycles
         self.total_boxes = total_boxes
+        self.mode = mode
+        self.tools_enabled = tools_enabled
 
         self.state = BoxState(box_id=box_id)
         self.is_done = False
@@ -140,6 +166,12 @@ class BoxRunner:
                         visible_events = self.visibility_filter(
                             self.event_store.get_all_events()
                         )
+                        # Filter debate prompts to only those targeting this box
+                        visible_events = [
+                            e for e in visible_events
+                            if e.event_type != "debate_prompt"
+                            or e.metadata.get("target_box") == self.box_id
+                        ]
                         context = self._build_context(visible_events)
                     await self._run_cycle(context, conclude=True)
                     await self._signal_done()
@@ -155,6 +187,13 @@ class BoxRunner:
                 visible_events = self.visibility_filter(
                     self.event_store.get_all_events()
                 )
+
+                # Filter debate prompts to only those targeting this box
+                visible_events = [
+                    e for e in visible_events
+                    if e.event_type != "debate_prompt"
+                    or e.metadata.get("target_box") == self.box_id
+                ]
 
                 if not new_events and self.state.current_cycle > 0:
                     # Box 1 special handling (FIX 1): cycle on own findings
@@ -279,11 +318,25 @@ class BoxRunner:
         # -- Build conclude instruction if needed ----------------------
         conclude_instruction = ""
         if conclude:
-            conclude_instruction = (
-                "\n\nIMPORTANT: The system is approaching its budget limit. "
-                "Wrap up your analysis. Synthesize your most important "
-                "findings into clear conclusions. Output [DONE] when complete."
-            )
+            _CONCLUDE = {
+                "solve": (
+                    "\n\nIMPORTANT: The system is approaching its budget limit. "
+                    "Wrap up your analysis. Synthesize your most important "
+                    "findings into clear conclusions. Output [DONE] when complete."
+                ),
+                "explore": (
+                    "\n\nIMPORTANT: The system is approaching its budget limit. "
+                    "Wrap up your exploration. Synthesize the most important "
+                    "discoveries, map the boundaries you've found, and document "
+                    "the key failure analyses. Output [DONE] when complete."
+                ),
+                "freeform": (
+                    "\n\nIMPORTANT: The system is approaching its budget limit. "
+                    "Wrap up your analysis. Synthesize everything you've learned "
+                    "into your most valuable findings. Output [DONE] when complete."
+                ),
+            }
+            conclude_instruction = _CONCLUDE.get(self.mode, _CONCLUDE["solve"])
 
         system = self.system_prompt.replace(
             "{conclude_instruction}", conclude_instruction
@@ -327,7 +380,32 @@ class BoxRunner:
             return
 
         # -- Parse findings from response ------------------------------
-        content = response.choices[0].message.content or ""
+        choice = response.choices[0]
+        message = choice.message
+
+        # Handle content that may be a list of blocks (tool use responses)
+        if isinstance(message.content, list):
+            # Extract text from content blocks
+            text_parts = []
+            for block in message.content:
+                if hasattr(block, 'text'):
+                    text_parts.append(block.text)
+                elif hasattr(block, 'type') and block.type == 'text':
+                    text_parts.append(block.text)
+            content = "\n".join(text_parts)
+
+            # Check for web search annotations
+            for block in message.content:
+                if hasattr(block, 'annotations'):
+                    for ann in (block.annotations or []):
+                        if hasattr(ann, 'type') and ann.type == 'url_citation':
+                            # Web search was used - add metadata to events
+                            pass
+        elif message.content:
+            content = message.content
+        else:
+            content = ""
+
         events = self._parse_findings(content)
 
         # -- Record token usage & cost ---------------------------------
@@ -397,6 +475,9 @@ class BoxRunner:
                 else:
                     kwargs["max_tokens"] = self.max_completion_tokens
 
+                if self.tools_enabled:
+                    kwargs["tools"] = [{"type": "web_search_20250305"}]
+
                 return await self.client.chat.completions.create(**kwargs)
 
             except RateLimitError:
@@ -446,17 +527,27 @@ class BoxRunner:
                 text = text.strip()
                 if not text:
                     continue
-                findings.append(
-                    Event(
-                        source_box=self.box_id,
-                        event_type=event_type.lower(),
-                        content=text,
-                        metadata={
-                            "cycle": self.state.current_cycle,
-                            "model": self.model,
-                        },
-                    )
+                event = Event(
+                    source_box=self.box_id,
+                    event_type=event_type.lower(),
+                    content=text,
+                    metadata={
+                        "cycle": self.state.current_cycle,
+                        "model": self.model,
+                    },
                 )
+                # Parse spawn_specialist metadata
+                if event_type.lower() == "spawn_specialist":
+                    # Parse "Name: X | Domain: Y" format
+                    match = re.match(
+                        r"Name:\s*(.+?)\s*\|\s*Domain:\s*(.+)",
+                        text.strip(),
+                        re.DOTALL,
+                    )
+                    if match:
+                        event.metadata["spawn_name"] = match.group(1).strip()
+                        event.metadata["spawn_domain"] = match.group(2).strip()
+                findings.append(event)
         elif content.strip():
             # No labels found — treat the whole response as evidence.
             findings.append(

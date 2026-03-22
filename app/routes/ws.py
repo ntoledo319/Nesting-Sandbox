@@ -71,6 +71,19 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str):
         await manager.broadcast(
             run_id, {"type": "event", "data": event.model_dump(mode="json")}
         )
+        # Also send box_spawned for specialist spawn events
+        if event.event_type == "specialist_spawned":
+            await manager.broadcast(
+                run_id,
+                {
+                    "type": "box_spawned",
+                    "data": {
+                        "box_id": f"specialist:{event.metadata.get('spawned_name', '')}",
+                        "name": event.metadata.get("spawned_name", ""),
+                        "domain": event.metadata.get("spawned_domain", ""),
+                    },
+                },
+            )
 
     async def on_cost(snapshot: dict):
         if not connected:
@@ -120,6 +133,7 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str):
             "data": {
                 "run_id": run_id,
                 "status": run_state.status,
+                "mode": run_state.config.mode,
                 "boxes": {
                     k: v.model_dump(mode="json")
                     for k, v in run_state.boxes.items()
@@ -148,6 +162,16 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str):
                 await run_manager.stop_run(run_id)
             elif msg.get("type") == "ping":
                 await websocket.send_json({"type": "pong"})
+            elif msg.get("type") == "user_input":
+                content = msg.get("content", "").strip()
+                if content and event_store:
+                    user_event = Event(
+                        source_box="user",
+                        event_type="user_input",
+                        content=content,
+                        metadata={"injected": True},
+                    )
+                    await event_store.publish(user_event)
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected for run %s", run_id)

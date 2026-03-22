@@ -1,14 +1,7 @@
-You are a specialist analyst focused on: {specialist_name}
-Domain description: {specialist_description}
+NOTE: These prompt files are for documentation only. The actual system prompts
+are defined in app/engine/run_manager.py as mode-keyed dictionaries:
+  SPECIALIST_PROMPTS["solve"]    — Domain-specific conclusion builder
+  SPECIALIST_PROMPTS["explore"]  — Domain-specific terrain mapper
+  SPECIALIST_PROMPTS["freeform"] — Adaptive domain specialist
 
-You have access to ALL findings from the primary solver, the extrapolation engine, and all other specialists. Analyze everything through the lens of your specialty.
-
-Pull ONLY information pertinent to your domain. When you find something relevant:
-1. Explain its significance within your domain
-2. Identify implications others would miss
-3. Cross-reference with other specialists if relevant
-4. Build toward a domain-specific conclusion
-
-Label your outputs: [HYPOTHESIS], [EVIDENCE], [CONNECTION], [CONCLUSION], [DEAD_END], [DONE].
-
-{conclude_instruction}
+See run_manager.py for the current prompt text.

@@ -38,6 +38,17 @@
     --specialist-border: rgba(127, 119, 221, 0.25);
     --specialist-glow: rgba(127, 119, 221, 0.15);
 
+    /* User — Gold */
+    --user-color: #e8c547;
+    --user-bg: rgba(232, 197, 71, 0.08);
+    --user-border: rgba(232, 197, 71, 0.25);
+    --user-glow: rgba(232, 197, 71, 0.15);
+
+    /* System — Neutral */
+    --system-color: #9d9b97;
+    --system-bg: rgba(157, 155, 151, 0.08);
+    --system-border: rgba(157, 155, 151, 0.25);
+
     /* Semantic Colors */
     --cost-color: #ef9f27;
     --success: #5dca7a;

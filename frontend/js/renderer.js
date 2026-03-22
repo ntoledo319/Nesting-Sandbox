@@ -128,6 +128,14 @@ class Renderer {
         item.className = 'feed-item feed-item-enter';
         item.dataset.source = event.source_box;
 
+        // Special CSS classes based on event type and source
+        if (event.event_type === 'user_input') item.classList.add('feed-item-user');
+        if (event.event_type === 'conflict') item.classList.add('feed-item-conflict');
+        if (event.event_type === 'resolution') item.classList.add('feed-item-resolution');
+        if (event.event_type === 'rebuttal') item.classList.add('feed-item-rebuttal');
+        if (event.event_type === 'specialist_spawned') item.classList.add('feed-item-spawn');
+        if (event.metadata && event.metadata.source === 'web_search') item.classList.add('feed-item-web');
+
         const expanded = event.content.length > 300;
         const displayContent = expanded ? truncate(event.content, 300) : event.content;
 
@@ -135,7 +143,7 @@ class Renderer {
             <div class="feed-item-header">
                 <span class="feed-dot color-${colorClass}"></span>
                 <span class="feed-source color-${colorClass}">${escapeHtml(shortName)}</span>
-                <span class="feed-type">${eventTypeLabel(event.event_type)}</span>
+                <span class="feed-type-badge ${eventTypeColorClass(event.event_type)}">${eventTypeLabel(event.event_type)}</span>
             </div>
             <div class="feed-item-content">${renderMarkdown(displayContent)}</div>
             ${expanded ? `<button class="feed-expand" data-event-id="${event.id}">Show more</button>` : ''}
@@ -206,16 +214,54 @@ class Renderer {
     updateStatus(boxes) {
         const statusEl = document.getElementById('statusText');
         if (!statusEl) return;
+        const mode = (typeof App !== 'undefined' && App.mode) ? App.mode : 'solve';
 
         const parts = [];
         for (const [id, box] of Object.entries(boxes)) {
             if (id.startsWith('gate:')) continue;
-            const name = getBoxShortName(id);
+            const name = id.startsWith('specialist:') ? getBoxShortName(id) : getBoxVizLabels(id, mode).sub || getBoxShortName(id);
             const status = box.status || 'waiting';
             const cycle = box.current_cycle || box.cycle || 0;
             parts.push(`${name}: ${status}${status === 'thinking' ? ` (cycle ${cycle})` : ''}`);
         }
         statusEl.textContent = parts.join(' \u00b7 ');
+    }
+
+    /**
+     * Render a history item for the history modal.
+     * @param {object} run
+     * @returns {string} HTML string
+     */
+    renderHistoryItem(run) {
+        return `
+            <label class="history-item">
+                <input type="checkbox" value="${escapeHtml(run.run_id)}">
+                <div class="history-item-info">
+                    <div class="history-item-question">${escapeHtml(truncate(run.question, 120))}</div>
+                    <div class="history-item-meta">
+                        ${formatCost(run.total_cost)} · ${run.completed_at ? new Date(run.completed_at).toLocaleDateString() : ''}
+                        ${run.specialists && run.specialists.length ? ' · ' + run.specialists.length + ' specialists' : ''}
+                    </div>
+                </div>
+            </label>
+        `;
+    }
+
+    /**
+     * Render a seed run card for the setup view.
+     * @param {object} run
+     * @returns {HTMLElement}
+     */
+    renderSeedRunCard(run) {
+        const card = document.createElement('div');
+        card.className = 'seed-run-card';
+        card.dataset.runId = run.run_id;
+        card.innerHTML = `
+            <span class="seed-question">${escapeHtml(truncate(run.question, 80))}</span>
+            <span class="seed-cost">${formatCost(run.total_cost)}</span>
+            <button class="seed-remove" data-run-id="${escapeHtml(run.run_id)}">✕</button>
+        `;
+        return card;
     }
 
     /* --------------------------------------------------------
@@ -230,7 +276,7 @@ class Renderer {
     renderReportCard(report) {
         const card = document.createElement('div');
         const colorClass = getBoxColorClass(report.box_id);
-        const displayName = getBoxDisplayName(report.box_id);
+        const displayName = report.display_name || getBoxDisplayName(report.box_id);
 
         const stats = [];
         if (report.finding_counts) {
@@ -273,11 +319,27 @@ class Renderer {
         if (!container) return;
         container.innerHTML = '';
 
+        // Mode-aware title
+        const mode = (typeof App !== 'undefined' && App.mode) ? App.mode : 'solve';
+        const titleEl = document.getElementById('resultsTitle');
+        if (titleEl) {
+            const titles = {
+                solve: 'RUN COMPLETE',
+                explore: 'EXPLORATION COMPLETE',
+                freeform: 'ANALYSIS COMPLETE',
+            };
+            titleEl.textContent = titles[mode] || 'RUN COMPLETE';
+        }
+
         // Summary stats
         const statsEl = document.getElementById('resultsSummaryStats');
         if (statsEl && report.receipt) {
             const r = report.receipt;
+            const mode = (typeof App !== 'undefined' && App.mode) ? App.mode : 'solve';
+            const modeLabels = { solve: 'Solve', explore: 'Explore', freeform: 'Freeform' };
             statsEl.innerHTML = `
+                <span class="results-mode-badge mode-badge-${mode}">${modeLabels[mode] || mode}</span>
+                <span>\u00b7</span>
                 <span>${formatCost(r.total_cost)}</span>
                 <span>\u00b7</span>
                 <span>${r.cycles_completed} cycles</span>

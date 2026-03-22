@@ -27,6 +27,7 @@
                     <input type="password" id="apiKeyInput" placeholder="OpenAI API Key (optional)" class="input-subtle">
                     <button id="apiKeyToggle" class="btn-icon" title="Toggle visibility">&#x1F441;</button>
                 </div>
+                <span id="headerModeBadge" class="header-mode-badge hidden"></span>
                 <span id="headerCost" class="header-cost hidden"></span>
                 <button id="headerStop" class="btn-danger hidden">&#x25A0; Stop</button>
             </div>
@@ -41,8 +42,62 @@
                     <textarea id="questionInput" class="textarea-main" placeholder="Ask something conventionally impossible..." rows="4"></textarea>
                 </div>
 
-                <!-- Documents -->
+                <!-- Mode Selector -->
+                <div class="setup-section fade-in" style="--delay: 0.5">
+                    <label class="section-label">MODE</label>
+                    <div class="mode-selector" id="modeSelector">
+                        <button class="mode-btn active" data-mode="solve">
+                            <span class="mode-icon">&#x2692;</span>
+                            <span class="mode-label">Solve</span>
+                            <span class="mode-desc">Find the answer</span>
+                        </button>
+                        <button class="mode-btn" data-mode="explore">
+                            <span class="mode-icon">&#x2690;</span>
+                            <span class="mode-label">Explore</span>
+                            <span class="mode-desc">Learn from trying</span>
+                        </button>
+                        <button class="mode-btn" data-mode="freeform">
+                            <span class="mode-icon">&#x29BF;</span>
+                            <span class="mode-label">Freeform</span>
+                            <span class="mode-desc">See what happens</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Web Search Toggle -->
                 <div class="setup-section fade-in" style="--delay: 1">
+                    <div class="toggle-row">
+                        <label class="section-label">WEB SEARCH</label>
+                        <label class="toggle">
+                            <input type="checkbox" id="webSearchToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-desc">Let Box 1 search the web during reasoning</span>
+                    </div>
+                </div>
+
+                <!-- Conflict Detection + Dynamic Spawning Toggles -->
+                <div class="setup-section fade-in" style="--delay: 1.5">
+                    <div class="toggle-row">
+                        <label class="section-label">CONFLICT DETECTION</label>
+                        <label class="toggle">
+                            <input type="checkbox" id="conflictToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-desc">Auto-detect and debate contradictions between boxes</span>
+                    </div>
+                    <div class="toggle-row" style="margin-top: 12px;">
+                        <label class="section-label">DYNAMIC SPAWNING</label>
+                        <label class="toggle">
+                            <input type="checkbox" id="spawningToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-desc">Let Box 2 create new specialists mid-run</span>
+                    </div>
+                </div>
+
+                <!-- Documents -->
+                <div class="setup-section fade-in" style="--delay: 2">
                     <label class="section-label">Supporting Documents</label>
                     <div id="dropZone" class="drop-zone">
                         <div class="drop-zone-content">
@@ -54,8 +109,17 @@
                     <div id="fileList" class="file-list"></div>
                 </div>
 
+                <!-- Seed from Prior Runs -->
+                <div class="setup-section fade-in" style="--delay: 3">
+                    <div class="section-header">
+                        <label class="section-label">SEED FROM PRIOR RUNS</label>
+                        <button id="loadHistoryBtn" class="btn-secondary btn-sm">Browse History</button>
+                    </div>
+                    <div id="seedRunList" class="seed-run-list"></div>
+                </div>
+
                 <!-- Specialists -->
-                <div class="setup-section fade-in" style="--delay: 2">
+                <div class="setup-section fade-in" style="--delay: 4">
                     <div class="section-header">
                         <label class="section-label">SPECIALISTS</label>
                         <button id="addSpecialist" class="btn-secondary btn-sm">+ Add</button>
@@ -86,8 +150,20 @@
                     </div>
                 </div>
 
+                <!-- History Modal -->
+                <div id="historyModal" class="modal hidden">
+                    <div class="modal-content modal-lg">
+                        <h3 class="modal-title">Run History</h3>
+                        <div id="historyList" class="history-list"></div>
+                        <div class="modal-actions">
+                            <button id="cancelHistory" class="btn-ghost">Cancel</button>
+                            <button id="confirmHistory" class="btn-primary">Add Selected</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Budget -->
-                <div class="setup-section fade-in" style="--delay: 3">
+                <div class="setup-section fade-in" style="--delay: 5">
                     <label class="section-label">BUDGET</label>
                     <div class="budget-slider-container">
                         <span class="budget-label">$1</span>
@@ -98,7 +174,7 @@
                 </div>
 
                 <!-- Estimate -->
-                <div class="setup-section fade-in" style="--delay: 4">
+                <div class="setup-section fade-in" style="--delay: 6">
                     <div id="estimateCard" class="estimate-card hidden">
                         <h3 class="estimate-title">Pre-Run Estimate</h3>
                         <div id="estimateLoading" class="estimate-loading hidden">
@@ -124,7 +200,7 @@
                 </div>
 
                 <!-- Launch Button -->
-                <div class="setup-section fade-in" style="--delay: 5">
+                <div class="setup-section fade-in" style="--delay: 7">
                     <button id="launchBtn" class="btn-launch" disabled>
                         <span class="launch-icon">&#x25B6;</span>
                         <span>Launch Sandbox</span>
@@ -181,6 +257,10 @@
                         <div id="feedFilters" class="feed-filters"></div>
                     </div>
                     <div id="liveFeed" class="live-feed"></div>
+                    <div class="feed-input-bar" id="feedInputBar">
+                        <input type="text" id="feedInput" class="feed-input" placeholder="Inject context or redirect the reasoning..." autocomplete="off">
+                        <button id="feedSendBtn" class="btn-primary btn-sm feed-send-btn">Inject</button>
+                    </div>
                 </div>
             </div>
 
@@ -194,7 +274,7 @@
         <main id="resultsView" class="view view-results hidden">
             <div class="results-header">
                 <div class="results-summary">
-                    <h2>RUN COMPLETE</h2>
+                    <h2 id="resultsTitle">RUN COMPLETE</h2>
                     <div id="resultsSummaryStats" class="results-stats"></div>
                 </div>
                 <div class="results-actions">

@@ -61,6 +61,18 @@ class BoxVisualization {
     }
 
     /**
+     * Flash all boxes and specialists simultaneously (e.g. for user_input events).
+     */
+    flashAll() {
+        for (const boxId of Object.keys(this.boxes)) {
+            this.flashBox(boxId);
+        }
+        for (const spec of this.specialists) {
+            this.flashBox(spec.id);
+        }
+    }
+
+    /**
      * Briefly flash a box element to indicate activity.
      * @param {string} boxId
      */
@@ -81,6 +93,17 @@ class BoxVisualization {
         const hasSpecs = this.specialists.length > 0;
         const box1 = this.boxes['box1'] || { status: 'waiting', cycle: 0 };
         const box2 = this.boxes['box2'] || { status: 'waiting', cycle: 0 };
+        const mode = (typeof App !== 'undefined' && App.mode) ? App.mode : 'solve';
+        const b1 = getBoxVizLabels('box1', mode);
+        const b2 = getBoxVizLabels('box2', mode);
+
+        const innerHtml = `
+            <div class="viz-inner ${this._boxAnim(box1.status, 'box1')}" data-box="box1">
+                <div class="viz-inner-icon">\u25c8</div>
+                <div class="viz-inner-label">${b1.label} \u00b7 ${b1.sub}</div>
+                <div class="viz-inner-meta">cycle ${box1.cycle}</div>
+                <div class="viz-inner-status">${this._statusDots(box1)}</div>
+            </div>`;
 
         let specsHtml = '';
 
@@ -99,14 +122,9 @@ class BoxVisualization {
                 <div class="viz-outer ${this._statusAnim('specialist')}" data-box="specialists">
                     <div class="viz-outer-label">Specialists</div>
                     <div class="viz-middle ${this._boxAnim(box2.status, 'box2')}" data-box="box2">
-                        <div class="viz-middle-label">Box 2 \u00b7 Extrapolator</div>
+                        <div class="viz-middle-label">${b2.label} \u00b7 ${b2.sub}</div>
                         <div class="viz-middle-meta">cycle ${box2.cycle} \u00b7 ${box2.status}</div>
-                        <div class="viz-inner ${this._boxAnim(box1.status, 'box1')}" data-box="box1">
-                            <div class="viz-inner-icon">\u25c8</div>
-                            <div class="viz-inner-label">Box 1 \u00b7 Solver</div>
-                            <div class="viz-inner-meta">cycle ${box1.cycle}</div>
-                            <div class="viz-inner-status">${this._statusDots(box1)}</div>
-                        </div>
+                        ${innerHtml}
                     </div>
                     <div class="spec-pills-row">${specPills}</div>
                 </div>
@@ -114,14 +132,9 @@ class BoxVisualization {
         } else {
             specsHtml = `
                 <div class="viz-middle no-outer ${this._boxAnim(box2.status, 'box2')}" data-box="box2">
-                    <div class="viz-middle-label">Box 2 \u00b7 Extrapolator</div>
+                    <div class="viz-middle-label">${b2.label} \u00b7 ${b2.sub}</div>
                     <div class="viz-middle-meta">cycle ${box2.cycle} \u00b7 ${box2.status}</div>
-                    <div class="viz-inner ${this._boxAnim(box1.status, 'box1')}" data-box="box1">
-                        <div class="viz-inner-icon">\u25c8</div>
-                        <div class="viz-inner-label">Box 1 \u00b7 Solver</div>
-                        <div class="viz-inner-meta">cycle ${box1.cycle}</div>
-                        <div class="viz-inner-status">${this._statusDots(box1)}</div>
-                    </div>
+                    ${innerHtml}
                 </div>
             `;
         }
