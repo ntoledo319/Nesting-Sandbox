@@ -7,7 +7,7 @@ completion, and manages the budget lifecycle.
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable, Optional
 
 from openai import AsyncOpenAI
@@ -291,6 +291,7 @@ class RunManager:
         self._complete_callbacks: dict[str, list[Callable]] = {}
         self._status_callbacks: dict[str, list[Callable]] = {}
         self._detectors: dict[str, ConflictDetector] = {}
+        self._monitor_tasks: dict[str, asyncio.Task] = {}
         self.run_history = RunHistory()
 
     # ------------------------------------------------------------------
@@ -317,6 +318,18 @@ class RunManager:
         if run_id not in self._status_callbacks:
             self._status_callbacks[run_id] = []
         self._status_callbacks[run_id].append(callback)
+
+    def remove_complete_callback(self, run_id: str, callback: Callable) -> None:
+        """Remove a previously-registered completion callback (no-op if absent)."""
+        cbs = self._complete_callbacks.get(run_id)
+        if cbs and callback in cbs:
+            cbs.remove(callback)
+
+    def remove_status_callback(self, run_id: str, callback: Callable) -> None:
+        """Remove a previously-registered status callback (no-op if absent)."""
+        cbs = self._status_callbacks.get(run_id)
+        if cbs and callback in cbs:
+            cbs.remove(callback)
 
     # ------------------------------------------------------------------
     # Start a run
@@ -392,7 +405,9 @@ class RunManager:
             if ws_status_callback:
                 await ws_status_callback(box_id, status, cycle)
             # Also notify any externally-registered status callbacks.
-            for cb in self._status_callbacks.get(run_id, []):
+            # Snapshot the list to avoid RuntimeError if a callback
+            # modifies the registration list during iteration.
+            for cb in list(self._status_callbacks.get(run_id, [])):
                 try:
                     await cb(box_id, status, cycle)
                 except Exception:
@@ -519,9 +534,13 @@ class RunManager:
                 await event_store.publish(prior_event)
 
         # -- Background monitor ---------------------------------------
-        asyncio.create_task(
+        # NOTE: The monitor task gathers self._tasks[run_id], so it must
+        # NOT be added to that list (it would await itself -> deadlock).
+        # Store it separately so stop_run / cleanup_run can cancel it.
+        monitor_task = asyncio.create_task(
             self._monitor_run(run_id), name=f"{run_id}:monitor"
         )
+        self._monitor_tasks[run_id] = monitor_task
 
         logger.info(
             "Run %s started: %d boxes (%d specialists)",
@@ -536,21 +555,34 @@ class RunManager:
     # ------------------------------------------------------------------
 
     async def _monitor_run(self, run_id: str) -> None:
-        """Wait for all box tasks to finish, then finalise the RunState."""
-        tasks = self._tasks.get(run_id, [])
-        if not tasks:
-            return
+        """Wait for all box tasks to finish, then finalise the RunState.
 
+        Re-gathers in a loop because the spawn monitor can dynamically
+        add new specialist tasks to ``self._tasks[run_id]`` after the
+        initial ``gather`` has started.
+        """
         try:
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            # Log any unexpected exceptions.
-            for i, result in enumerate(results):
-                if isinstance(result, Exception) and not isinstance(
-                    result, asyncio.CancelledError
-                ):
-                    logger.error(
-                        "Run %s task %d raised: %s", run_id, i, result
-                    )
+            while True:
+                tasks = list(self._tasks.get(run_id, []))
+                if not tasks:
+                    break
+
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                # Log any unexpected exceptions.
+                for i, result in enumerate(results):
+                    if isinstance(result, Exception) and not isinstance(
+                        result, asyncio.CancelledError
+                    ):
+                        logger.error(
+                            "Run %s task %d raised: %s", run_id, i, result
+                        )
+
+                # Check whether new tasks were appended while we were waiting
+                # (e.g. dynamically-spawned specialists).
+                current_tasks = self._tasks.get(run_id, [])
+                pending = [t for t in current_tasks if not t.done()]
+                if not pending:
+                    break
         except Exception:
             logger.exception("Monitor for run %s failed", run_id)
 
@@ -562,7 +594,7 @@ class RunManager:
         if run_state.status == "running":
             run_state.status = "completed"
 
-        run_state.end_time = datetime.utcnow()
+        run_state.end_time = datetime.now(timezone.utc)
 
         event_store = self._event_stores.get(run_id)
         if event_store:
@@ -580,15 +612,17 @@ class RunManager:
             len(run_state.events),
         )
 
-        # Save to run history
-        if run_state.status == "completed":
+        # Save to run history (guard against cost_tracker being None
+        # if the tracker was removed before the monitor finalised).
+        if run_state.status == "completed" and cost_tracker is not None:
             try:
                 self.run_history.save_run(run_state, cost_tracker, run_state.events)
             except Exception:
                 logger.exception("Failed to save run history for %s", run_id)
 
         # Notify any registered completion callbacks (e.g. WebSocket).
-        for cb in self._complete_callbacks.get(run_id, []):
+        # Snapshot the list to avoid RuntimeError if a callback modifies it.
+        for cb in list(self._complete_callbacks.get(run_id, [])):
             try:
                 await cb(run_state)
             except Exception:
@@ -603,7 +637,7 @@ class RunManager:
         run_state = self.active_runs.get(run_id)
         event_store = self._event_stores.get(run_id)
         cost_tracker = self._cost_trackers.get(run_id)
-        if not run_state or not event_store:
+        if not run_state or not event_store or not cost_tracker:
             return
 
         config = run_state.config
@@ -697,7 +731,7 @@ class RunManager:
                 await event_store.publish(spawned_event)
 
                 # Broadcast box_spawned for WS
-                for cb in self._status_callbacks.get(run_id, []):
+                for cb in list(self._status_callbacks.get(run_id, [])):
                     try:
                         await cb(spec_id, "waiting", 0)
                     except Exception:
@@ -742,11 +776,16 @@ class RunManager:
             if not task.done():
                 task.cancel()
 
+        # Cancel the monitor task (stored separately to avoid self-gather deadlock).
+        monitor_task = self._monitor_tasks.get(run_id)
+        if monitor_task and not monitor_task.done():
+            monitor_task.cancel()
+
         # Allow cancellation to propagate.
         await asyncio.sleep(0)
 
         run_state.status = "stopped"
-        run_state.end_time = datetime.utcnow()
+        run_state.end_time = datetime.now(timezone.utc)
 
         event_store = self._event_stores.get(run_id)
         if event_store:
@@ -770,9 +809,14 @@ class RunManager:
             if not task.done():
                 task.cancel()
 
+        # Cancel the monitor task (stored separately).
+        monitor_task = self._monitor_tasks.pop(run_id, None)
+        if monitor_task and not monitor_task.done():
+            monitor_task.cancel()
+
         event_store = self._event_stores.pop(run_id, None)
         if event_store:
-            event_store.clear()
+            await event_store.clear()
 
         self._cost_trackers.pop(run_id, None)
         self._boxes.pop(run_id, None)

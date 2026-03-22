@@ -286,7 +286,7 @@ class BoxRunner:
             self.state.status = "error"
             await self._update_status("error")
         finally:
-            self.event_store.unsubscribe(self.box_id)
+            await self.event_store.unsubscribe(self.box_id)
 
     # ------------------------------------------------------------------
     # Event collection

@@ -57,6 +57,7 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str):
         await websocket.send_json(
             {"type": "error", "data": {"message": "Run not found"}}
         )
+        manager.disconnect(run_id, websocket)
         await websocket.close()
         return
 
@@ -184,3 +185,7 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str):
             event_store.remove_ws_callback(on_event)
         if cost_tracker:
             cost_tracker.remove_callback(on_cost)
+        # Clean up status and completion callbacks to prevent
+        # firing on a disconnected websocket (memory leak fix).
+        run_manager.remove_status_callback(run_id, on_status)
+        run_manager.remove_complete_callback(run_id, on_complete)

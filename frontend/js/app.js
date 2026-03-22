@@ -20,6 +20,7 @@ const App = {
     boxStates: {},
     estimateTimer: null,
     currentReport: null,
+    _fetchResultsRetries: 0,
     mode: 'solve', // 'solve' | 'explore' | 'freeform'
     seedRunIds: [],
     seedRuns: [],  // Full run data for display
@@ -66,7 +67,10 @@ const App = {
             dropZone.classList.remove('drag-over');
             this.handleFiles(e.dataTransfer.files);
         });
-        fileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
+        fileInput.addEventListener('change', (e) => {
+            this.handleFiles(e.target.files);
+            e.target.value = ''; // Reset so re-selecting the same file triggers change
+        });
 
         // Specialist modal — open
         document.getElementById('addSpecialist').addEventListener('click', () => {
@@ -407,10 +411,20 @@ const App = {
         });
 
         this.ws.on('disconnected', () => {
+            // Clear stop fallback to avoid duplicate fetchResults calls
+            if (this._stopFallback) {
+                clearTimeout(this._stopFallback);
+                this._stopFallback = null;
+            }
             // Check if run completed while we were disconnected
             if (this.runId) {
                 setTimeout(() => this.checkRunStatus(), 2000);
             }
+        });
+
+        this.ws.on('reconnect_failed', () => {
+            const statusEl = document.getElementById('statusText');
+            if (statusEl) statusEl.textContent = 'Connection lost \u2014 please refresh the page';
         });
     },
 
@@ -594,6 +608,10 @@ const App = {
         if (!this.runId) return;
         try {
             const resp = await fetch(`/api/runs/${this.runId}`);
+            if (!resp.ok) {
+                console.error('Status check failed:', resp.status);
+                return;
+            }
             const data = await resp.json();
             if (data.status === 'completed' || data.status === 'stopped') {
                 this.fetchResults();
@@ -613,10 +631,17 @@ const App = {
             const resp = await fetch(`/api/runs/${this.runId}/report`);
             if (!resp.ok) {
                 console.error('Failed to fetch results:', resp.status);
-                // Retry after delay
-                setTimeout(() => this.fetchResults(), 3000);
+                // Retry after delay, up to 5 attempts
+                this._fetchResultsRetries++;
+                if (this._fetchResultsRetries < 5) {
+                    setTimeout(() => this.fetchResults(), 3000);
+                } else {
+                    console.error('Max retries reached for fetching results');
+                    this._fetchResultsRetries = 0;
+                }
                 return;
             }
+            this._fetchResultsRetries = 0;
             const report = await resp.json();
             this.currentReport = report;
             this.showResults(report);
@@ -626,6 +651,7 @@ const App = {
     },
 
     showResults(report) {
+        if (this.state === 'results') return; // Prevent duplicate transitions
         this.ws.disconnect();
         document.getElementById('headerStop').classList.add('hidden');
         this.switchView('results');
@@ -637,6 +663,7 @@ const App = {
         this.events = [];
         this.boxStates = {};
         this.currentReport = null;
+        this._fetchResultsRetries = 0;
         this.mode = 'solve';
         this.seedRunIds = [];
         this.seedRuns = [];
@@ -668,7 +695,7 @@ const App = {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `nesting-sandbox-${this.runId.substring(0, 8)}.json`;
+            a.download = `nesting-sandbox-${String(this.runId).substring(0, 8)}.json`;
             a.click();
             URL.revokeObjectURL(url);
         } catch (e) {

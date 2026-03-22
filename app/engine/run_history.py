@@ -1,9 +1,8 @@
 """Cross-run memory — persists completed run summaries to disk."""
 
 import json
-import os
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from app.models import RunState, Event
@@ -51,7 +50,7 @@ class RunHistory:
             data = {
                 "run_id": run_state.run_id,
                 "question": run_state.config.question,
-                "completed_at": datetime.utcnow().isoformat() + "Z",
+                "completed_at": datetime.now(timezone.utc).isoformat() + "Z",
                 "total_cost": round(cost_tracker.total_cost, 4) if cost_tracker else 0,
                 "specialists": [s.name for s in run_state.config.specialists],
                 "summary": {"box_reports": box_reports},

@@ -1,7 +1,13 @@
 from pydantic import BaseModel, Field, field_validator
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
+import re
 import uuid
+
+
+def _utcnow() -> datetime:
+    """Return timezone-aware UTC now (avoids deprecated datetime.utcnow)."""
+    return datetime.now(timezone.utc)
 
 
 class SpecialistConfig(BaseModel):
@@ -11,17 +17,27 @@ class SpecialistConfig(BaseModel):
 
 class RunConfig(BaseModel):
     question: str = Field(min_length=1, max_length=100000)
-    documents: list[str] = []  # Document text content
-    specialists: list[SpecialistConfig] = []
+    documents: list[str] = Field(default_factory=list)  # Document text content
+    specialists: list[SpecialistConfig] = Field(default_factory=list)
     budget_cap: float = Field(default=10.0, gt=0)  # USD
     max_cycles: int = Field(default=50, ge=1, le=200)  # Safety limit even with budget
     api_key: Optional[str] = None  # Optional per-run API key
     mode: str = Field(default="solve")  # "solve" | "explore" | "freeform"
     web_search_enabled: bool = True
-    seed_run_ids: list[str] = []
+    seed_run_ids: list[str] = Field(default_factory=list)
     conflict_detection: bool = True
     allow_spawning: bool = True
     max_total_boxes: int = Field(default=10, ge=2, le=20)
+
+    @field_validator('seed_run_ids', mode='before')
+    @classmethod
+    def validate_seed_run_ids(cls, v):
+        """Ensure seed_run_ids are valid UUID-like strings (no path traversal)."""
+        _RUN_ID_RE = re.compile(r'^[a-f0-9\-]{36}$')
+        for run_id in v:
+            if not _RUN_ID_RE.match(run_id):
+                raise ValueError(f'Invalid seed run_id format: {run_id}')
+        return v
 
     @field_validator('mode')
     @classmethod
@@ -47,7 +63,7 @@ class RunConfig(BaseModel):
 
 class Event(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=_utcnow)
     source_box: str  # "box1", "box2", "specialist:Legal Implications"
     event_type: str  # "hypothesis", "evidence", "conclusion", "dead_end", "question", "connection", "done"
     content: str
@@ -62,19 +78,19 @@ class BoxState(BaseModel):
     total_output_tokens: int = 0
     total_reasoning_tokens: int = 0  # For o4-mini
     total_cost: float = 0.0
-    findings: list[Event] = []
+    findings: list[Event] = Field(default_factory=list)
 
 
 class RunState(BaseModel):
     run_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     status: str = "created"  # "estimating", "running", "concluding", "completed", "stopped", "error"
     config: RunConfig
-    boxes: dict[str, BoxState] = {}
+    boxes: dict[str, BoxState] = Field(default_factory=dict)
     total_cost: float = 0.0
     budget_cap: float = 10.0
-    start_time: datetime = Field(default_factory=datetime.utcnow)
+    start_time: datetime = Field(default_factory=_utcnow)
     end_time: Optional[datetime] = None
-    events: list[Event] = []
+    events: list[Event] = Field(default_factory=list)
 
 
 class CostEstimate(BaseModel):
@@ -84,7 +100,7 @@ class CostEstimate(BaseModel):
     cost_low: float
     cost_high: float
     cost_per_cycle: float
-    warnings: list[str] = []
+    warnings: list[str] = Field(default_factory=list)
 
 
 class BoxCost(BaseModel):

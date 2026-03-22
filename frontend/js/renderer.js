@@ -136,8 +136,9 @@ class Renderer {
         if (event.event_type === 'specialist_spawned') item.classList.add('feed-item-spawn');
         if (event.metadata && event.metadata.source === 'web_search') item.classList.add('feed-item-web');
 
-        const expanded = event.content.length > 300;
-        const displayContent = expanded ? truncate(event.content, 300) : event.content;
+        const content = event.content || '';
+        const expanded = content.length > 300;
+        const displayContent = expanded ? truncate(content, 300) : content;
 
         item.innerHTML = `
             <div class="feed-item-header">
@@ -146,11 +147,11 @@ class Renderer {
                 <span class="feed-type-badge ${eventTypeColorClass(event.event_type)}">${eventTypeLabel(event.event_type)}</span>
             </div>
             <div class="feed-item-content">${renderMarkdown(displayContent)}</div>
-            ${expanded ? `<button class="feed-expand" data-event-id="${event.id}">Show more</button>` : ''}
+            ${expanded ? `<button class="feed-expand" data-event-id="${escapeHtml(event.id)}">Show more</button>` : ''}
         `;
 
         if (expanded) {
-            this._fullContent.set(event.id, event.content);
+            this._fullContent.set(event.id, content);
         }
 
         // Remove enter animation class after animation completes
@@ -302,7 +303,7 @@ class Renderer {
             <div class="report-card-body">
                 <div class="report-card-meta">${stats.join(' \u00b7 ')}</div>
                 <div class="report-card-content">${renderMarkdown(report.report_markdown || '')}</div>
-                <button class="btn-ghost btn-sm report-download" data-box="${report.box_id}">Download Report</button>
+                <button class="btn-ghost btn-sm report-download" data-box="${escapeHtml(report.box_id)}">Download Report</button>
             </div>
         `;
 
@@ -335,7 +336,6 @@ class Renderer {
         const statsEl = document.getElementById('resultsSummaryStats');
         if (statsEl && report.receipt) {
             const r = report.receipt;
-            const mode = (typeof App !== 'undefined' && App.mode) ? App.mode : 'solve';
             const modeLabels = { solve: 'Solve', explore: 'Explore', freeform: 'Freeform' };
             statsEl.innerHTML = `
                 <span class="results-mode-badge mode-badge-${mode}">${modeLabels[mode] || mode}</span>
@@ -344,9 +344,9 @@ class Renderer {
                 <span>\u00b7</span>
                 <span>${r.cycles_completed} cycles</span>
                 <span>\u00b7</span>
-                <span>${formatNumber(r.total_tokens.input + r.total_tokens.output)} tokens</span>
+                <span>${formatNumber((r.total_tokens?.input || 0) + (r.total_tokens?.output || 0))} tokens</span>
                 <span>\u00b7</span>
-                <span>${r.cache_hit_rate}% cache</span>
+                <span>${r.cache_hit_rate || 0}% cache</span>
             `;
         }
 
@@ -385,9 +385,9 @@ class Renderer {
                         <tfoot>
                             <tr>
                                 <td><strong>Total</strong></td>
-                                <td class="mono">${formatNumber(report.receipt.total_tokens.input)}</td>
-                                <td class="mono">${formatNumber(report.receipt.total_tokens.output)}</td>
-                                <td class="mono">${formatNumber(report.receipt.total_tokens.reasoning)}</td>
+                                <td class="mono">${formatNumber(report.receipt.total_tokens?.input)}</td>
+                                <td class="mono">${formatNumber(report.receipt.total_tokens?.output)}</td>
+                                <td class="mono">${formatNumber(report.receipt.total_tokens?.reasoning)}</td>
                                 <td></td>
                                 <td class="mono"><strong>${formatCost(report.receipt.total_cost)}</strong></td>
                             </tr>

@@ -2,8 +2,6 @@
 
 import asyncio
 import logging
-import re
-from typing import Optional, Callable
 from openai import AsyncOpenAI
 from app.models import Event
 from app.engine.event_store import EventStore
@@ -81,8 +79,11 @@ class ConflictDetector:
         if len(substantive) < 2:
             return
 
-        # Build pairs from different boxes (focus on recent vs all)
-        new_substantive = [e for e in new_events if e in substantive]
+        # Build pairs from different boxes (focus on recent vs all).
+        # Use a set of IDs for O(1) membership checks instead of O(n)
+        # Pydantic model equality comparisons via ``in``.
+        substantive_ids = {e.id for e in substantive}
+        new_substantive = [e for e in new_events if e.id in substantive_ids]
         if not new_substantive:
             return
 

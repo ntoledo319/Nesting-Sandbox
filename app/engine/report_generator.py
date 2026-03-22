@@ -5,6 +5,8 @@ report data suitable for both the API JSON response and Markdown
 rendering in the frontend.
 """
 
+from datetime import timezone
+
 from app.engine.cost_tracker import CostTracker
 from app.models import Event, RunState
 
@@ -84,9 +86,12 @@ def generate_box_report(
     spawned_label = " (auto-spawned)" if is_spawned else ""
 
     # Collect non-done events emitted by this box.
+    # Use the explicitly-passed events list when available to avoid
+    # depending on (possibly stale/empty) run_state.events.
+    source_events = events if events is not None else run_state.events
     box_events: list[Event] = [
         e
-        for e in run_state.events
+        for e in source_events
         if e.source_box == box_id and e.event_type != "done"
     ]
 
@@ -130,7 +135,14 @@ def generate_receipt(run_state: RunState, cost_tracker: CostTracker) -> dict:
     """Generate the final cost receipt for a completed run."""
     duration = None
     if run_state.end_time is not None:
-        duration = (run_state.end_time - run_state.start_time).total_seconds()
+        # Normalise both to aware UTC so naive vs aware mismatch can't crash
+        start = run_state.start_time
+        end = run_state.end_time
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=timezone.utc)
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=timezone.utc)
+        duration = (end - start).total_seconds()
 
     return {
         "run_id": run_state.run_id,
@@ -235,18 +247,12 @@ def generate_full_report(
     # Use the explicit events list when provided, falling back to run_state.
     effective_events = events if events is not None else run_state.events
 
-    # Temporarily set run_state.events so generate_box_report can read them.
-    original_events = run_state.events
-    run_state.events = effective_events
-
+    # Pass effective_events explicitly — no longer mutates run_state.events.
     box_reports: list[dict] = []
     for box_id in run_state.boxes:
         report = generate_box_report(run_state, box_id, events=effective_events)
         if report:
             box_reports.append(report)
-
-    # Restore original events to avoid side-effects on shared state.
-    run_state.events = original_events
 
     receipt = generate_receipt(run_state, cost_tracker)
     conflicts_section = _build_conflicts_section(effective_events)

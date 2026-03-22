@@ -23,11 +23,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="The Nesting Sandbox", version="1.0.0", lifespan=lifespan)
 
-# CORS
+# CORS — allow_credentials=True is incompatible with allow_origins=["*"]
+# per the CORS spec (browsers will reject the response).
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

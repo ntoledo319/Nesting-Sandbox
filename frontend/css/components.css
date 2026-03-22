@@ -841,12 +841,12 @@
 
 .feed-item {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    gap: 4px;
     padding: 10px 14px;
     background: var(--bg-surface);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
-    animation: slide-in-bottom 300ms var(--ease-out);
     transition: background var(--duration-fast) ease;
 }
 
@@ -1190,6 +1190,8 @@
 .report-dot.color-box1 { background: var(--box1-color); }
 .report-dot.color-box2 { background: var(--box2-color); }
 .report-dot.color-specialist { background: var(--specialist-color); }
+.report-dot.color-user { background: var(--user-color); }
+.report-dot.color-system { background: var(--system-color); }
 
 .report-card-toggle {
     font-size: 0.7rem;
@@ -1466,11 +1468,15 @@
 .color-box1-bg { background: var(--box1-color); }
 .color-box2-bg { background: var(--box2-color); }
 .color-specialist-bg { background: var(--specialist-color); }
+.color-user-bg { background: var(--user-color); }
+.color-system-bg { background: var(--system-color); }
 
 /* Border color classes (used by report cards) */
 .color-box1-border { border-left: 3px solid var(--box1-color); }
 .color-box2-border { border-left: 3px solid var(--box2-color); }
 .color-specialist-border { border-left: 3px solid var(--specialist-color); }
+.color-user-border { border-left: 3px solid var(--user-color); }
+.color-system-border { border-left: 3px solid var(--system-color); }
 
 /* Conclude Banner */
 .conclude-banner {

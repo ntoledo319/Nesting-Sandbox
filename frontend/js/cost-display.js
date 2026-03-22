@@ -35,8 +35,8 @@ class CostDisplay {
 
         // Animate main cost number
         const prevCost = this.currentCost;
-        this.currentCost = data.total_cost;
-        animateNumber(this.elements.current, prevCost, data.total_cost, 400);
+        this.currentCost = data.total_cost || 0;
+        animateNumber(this.elements.current, prevCost, this.currentCost, 400);
 
         // Header cost
         this.elements.headerCost.textContent = formatCost(data.total_cost);
@@ -49,7 +49,7 @@ class CostDisplay {
         this.elements.pct.textContent = (data.budget_pct || 0).toFixed(1) + '%';
 
         // Progress bar width
-        const pct = Math.min(data.budget_pct, 100);
+        const pct = Math.min(data.budget_pct || 0, 100);
         this.elements.bar.style.width = pct + '%';
 
         // Color the bar based on budget usage

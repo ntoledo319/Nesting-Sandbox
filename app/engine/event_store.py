@@ -63,12 +63,14 @@ class EventStore:
         If the subscriber already exists the existing queue is replaced.
         """
         queue: asyncio.Queue[Event] = asyncio.Queue()
-        self.subscribers[subscriber_id] = queue
+        async with self._lock:
+            self.subscribers[subscriber_id] = queue
         return queue
 
-    def unsubscribe(self, subscriber_id: str) -> None:
+    async def unsubscribe(self, subscriber_id: str) -> None:
         """Remove a subscriber by id (no-op if absent)."""
-        self.subscribers.pop(subscriber_id, None)
+        async with self._lock:
+            self.subscribers.pop(subscriber_id, None)
 
     # ------------------------------------------------------------------
     # WebSocket integration
@@ -124,7 +126,8 @@ class EventStore:
     # Lifecycle
     # ------------------------------------------------------------------
 
-    def clear(self) -> None:
+    async def clear(self) -> None:
         """Discard all events and tear down every subscriber queue."""
-        self.events.clear()
-        self.subscribers.clear()
+        async with self._lock:
+            self.events.clear()
+            self.subscribers.clear()

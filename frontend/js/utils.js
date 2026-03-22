@@ -61,6 +61,10 @@ function renderMarkdown(text) {
         .replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>')
         .replace(/\n\n/g, '</p><p>')
         .replace(/\n/g, '<br>');
+    // Wrap consecutive <li> runs in <ul> tags
+    html = html.replace(/((?:<li>.*?<\/li>(?:<br>)?)+)/g, '<ul>$1</ul>');
+    // Clean up stray <br> inside <ul> between list items
+    html = html.replace(/<\/li><br><li>/g, '</li><li>');
     return '<p>' + html + '</p>';
 }
 
@@ -164,6 +168,7 @@ function uid() {
  * @returns {string}
  */
 function truncate(text, maxLen = 200) {
+    if (!text) return '';
     if (text.length <= maxLen) return text;
     return text.substring(0, maxLen) + '...';
 }

@@ -6,7 +6,7 @@ approaching (80 %) or breached (95 %).
 """
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable
 
 from app.models import BoxCost
@@ -32,7 +32,7 @@ class CostTracker:
         self.budget_cap: float = budget_cap
         self.box_costs: dict[str, BoxCost] = {}
         self.total_cost: float = 0.0
-        self.start_time: datetime = datetime.utcnow()
+        self.start_time: datetime = datetime.now(timezone.utc)
         self._callbacks: list[Callable[[dict], object]] = []
         self._lock = asyncio.Lock()
 
@@ -97,8 +97,10 @@ class CostTracker:
             self.total_cost += total
 
         # Notify outside the lock to avoid deadlocks in callback chains.
+        # Snapshot the callback list to prevent RuntimeError if a callback
+        # triggers remove_callback (modifying the list during iteration).
         snapshot = self.get_snapshot()
-        for cb in self._callbacks:
+        for cb in list(self._callbacks):
             try:
                 await cb(snapshot)
             except Exception:
@@ -133,7 +135,7 @@ class CostTracker:
 
     def get_burn_rate(self) -> float:
         """Current spend rate in $/minute since the tracker was created."""
-        elapsed_minutes = (datetime.utcnow() - self.start_time).total_seconds() / 60
+        elapsed_minutes = (datetime.now(timezone.utc) - self.start_time).total_seconds() / 60
         return self.total_cost / max(elapsed_minutes, 0.01)
 
     def _project_total(self) -> float:
