@@ -23,6 +23,8 @@ class ConnectionManager:
             self.connections[run_id] = [
                 ws for ws in self.connections[run_id] if ws != websocket
             ]
+            if not self.connections[run_id]:
+                del self.connections[run_id]
 
     async def broadcast(self, run_id: str, message: dict):
         if run_id not in self.connections:
@@ -58,17 +60,26 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str):
         await websocket.close()
         return
 
+    # --- Guard flag to prevent sends after disconnect ---
+    connected = True
+
     # --- Callbacks for real-time updates ---
 
     async def on_event(event: Event):
+        if not connected:
+            return
         await manager.broadcast(
             run_id, {"type": "event", "data": event.model_dump(mode="json")}
         )
 
     async def on_cost(snapshot: dict):
+        if not connected:
+            return
         await manager.broadcast(run_id, {"type": "cost_update", "data": snapshot})
 
     async def on_status(box_id: str, status: str, cycle: int):
+        if not connected:
+            return
         await manager.broadcast(
             run_id,
             {
@@ -78,6 +89,8 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str):
         )
 
     async def on_complete(state: RunState):
+        if not connected:
+            return
         cost = cost_tracker.get_snapshot() if cost_tracker else {}
         await manager.broadcast(
             run_id,
@@ -125,7 +138,11 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str):
     try:
         while True:
             data = await websocket.receive_text()
-            msg = json.loads(data)
+            try:
+                msg = json.loads(data)
+            except json.JSONDecodeError:
+                await websocket.send_json({"type": "error", "data": {"message": "Invalid JSON"}})
+                continue
 
             if msg.get("type") == "stop":
                 await run_manager.stop_run(run_id)
@@ -137,6 +154,9 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str):
     except Exception as e:
         logger.error("WebSocket error for run %s: %s", run_id, e)
     finally:
+        connected = False
         manager.disconnect(run_id, websocket)
         if event_store:
             event_store.remove_ws_callback(on_event)
+        if cost_tracker:
+            cost_tracker.remove_callback(on_cost)

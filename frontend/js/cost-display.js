@@ -46,7 +46,7 @@ class CostDisplay {
         this.elements.budget.textContent = formatCost(data.budget_cap);
 
         // Percentage
-        this.elements.pct.textContent = data.budget_pct.toFixed(1) + '%';
+        this.elements.pct.textContent = (data.budget_pct || 0).toFixed(1) + '%';
 
         // Progress bar width
         const pct = Math.min(data.budget_pct, 100);
@@ -66,6 +66,8 @@ class CostDisplay {
         // Conclude banner
         if (data.should_conclude) {
             this.elements.concludeBanner.classList.remove('hidden');
+        } else {
+            this.elements.concludeBanner.classList.add('hidden');
         }
 
         // Per-box cost bars

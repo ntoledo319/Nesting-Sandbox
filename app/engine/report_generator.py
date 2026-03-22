@@ -92,9 +92,7 @@ def generate_receipt(run_state: RunState, cost_tracker: CostTracker) -> dict:
                 bc.reasoning_tokens for bc in cost_tracker.box_costs.values()
             ),
         },
-        "cycles_completed": max(
-            (bc.cycles for bc in cost_tracker.box_costs.values()), default=0
-        ),
+        "cycles_completed": sum(bc.cycles for bc in cost_tracker.box_costs.values()),
         "cache_hit_rate": cost_tracker.calculate_cache_rate(),
         "per_box_breakdown": [
             {
@@ -117,18 +115,37 @@ def generate_receipt(run_state: RunState, cost_tracker: CostTracker) -> dict:
 # ------------------------------------------------------------------
 
 def generate_full_report(
-    run_state: RunState, cost_tracker: CostTracker
+    run_state: RunState,
+    cost_tracker: CostTracker,
+    events: list[Event] | None = None,
 ) -> dict:
     """Generate the complete report for a run.
 
     Combines per-box reports, the cost receipt, and the raw event log
     into a single JSON-serialisable dict.
+
+    Parameters
+    ----------
+    events:
+        Optional override for the event list.  When supplied the report
+        uses these events instead of ``run_state.events``, which avoids
+        mutating shared state for in-progress runs.
     """
+    # Use the explicit events list when provided, falling back to run_state.
+    effective_events = events if events is not None else run_state.events
+
+    # Temporarily set run_state.events so generate_box_report can read them.
+    original_events = run_state.events
+    run_state.events = effective_events
+
     box_reports: list[dict] = []
     for box_id in run_state.boxes:
         report = generate_box_report(run_state, box_id)
         if report:
             box_reports.append(report)
+
+    # Restore original events to avoid side-effects on shared state.
+    run_state.events = original_events
 
     receipt = generate_receipt(run_state, cost_tracker)
 
@@ -138,5 +155,5 @@ def generate_full_report(
         "status": run_state.status,
         "box_reports": box_reports,
         "receipt": receipt,
-        "event_log": [e.model_dump() for e in run_state.events],
+        "event_log": [e.model_dump(mode="json") for e in effective_events],
     }

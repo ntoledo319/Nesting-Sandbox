@@ -12,6 +12,7 @@ from typing import Callable, Optional
 
 from openai import AsyncOpenAI
 
+from app.config import settings
 from app.engine.box_runner import BoxRunner
 from app.engine.cost_tracker import CostTracker
 from app.engine.event_store import EventStore
@@ -221,24 +222,29 @@ class RunManager:
                 except Exception:
                     pass
 
-        # -- Create Box 1 (primary solver, o4-mini) --------------------
+        # -- Total box count for done-detection (FIX 3) -----------------
+        total_boxes = 2 + len(config.specialists)
+
+        # -- Create Box 1 (primary solver) -----------------------------
         box1 = BoxRunner(
             box_id="box1",
-            model="o4-mini",
+            model=settings.box1_model,
             system_prompt=BOX1_SYSTEM,
             event_store=event_store,
             cost_tracker=cost_tracker,
             client=client,
             visibility_filter=_box1_filter,
-            max_completion_tokens=16384,
+            max_completion_tokens=settings.box1_max_completion_tokens,
             status_callback=status_callback,
+            max_cycles=config.max_cycles,
+            total_boxes=total_boxes,
         )
         run_state.boxes["box1"] = box1.state
 
-        # -- Create Box 2 (extrapolation engine, gpt-4.1) -------------
+        # -- Create Box 2 (extrapolation engine) -----------------------
         box2 = BoxRunner(
             box_id="box2",
-            model="gpt-4.1",
+            model=settings.box2_model,
             system_prompt=BOX2_SYSTEM,
             event_store=event_store,
             cost_tracker=cost_tracker,
@@ -246,10 +252,12 @@ class RunManager:
             visibility_filter=_box2_filter,
             max_completion_tokens=8192,
             status_callback=status_callback,
+            max_cycles=config.max_cycles,
+            total_boxes=total_boxes,
         )
         run_state.boxes["box2"] = box2.state
 
-        # -- Create specialist boxes (gpt-4.1-mini each) ---------------
+        # -- Create specialist boxes -----------------------------------
         specialists: list[BoxRunner] = []
         for spec_config in config.specialists:
             spec_id = f"specialist:{spec_config.name}"
@@ -259,7 +267,7 @@ class RunManager:
             )
             spec = BoxRunner(
                 box_id=spec_id,
-                model="gpt-4.1-mini",
+                model=settings.specialist_model,
                 system_prompt=spec_prompt,
                 event_store=event_store,
                 cost_tracker=cost_tracker,
@@ -268,6 +276,9 @@ class RunManager:
                 max_completion_tokens=4096,
                 status_callback=status_callback,
                 specialist_domain=spec_config.description,
+                gate_model=settings.gate_model,
+                max_cycles=config.max_cycles,
+                total_boxes=total_boxes,
             )
             run_state.boxes[spec_id] = spec.state
             specialists.append(spec)
@@ -414,5 +425,8 @@ class RunManager:
 
         self._cost_trackers.pop(run_id, None)
         self._boxes.pop(run_id, None)
+        # Clean up callback registrations (FIX 13)
+        self._complete_callbacks.pop(run_id, None)
+        self._status_callbacks.pop(run_id, None)
         # Keep the RunState in active_runs for later querying;
         # the caller can remove it when no longer needed.

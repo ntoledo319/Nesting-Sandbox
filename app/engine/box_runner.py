@@ -71,6 +71,8 @@ class BoxRunner:
         status_callback: Optional[Callable] = None,
         specialist_domain: Optional[str] = None,
         gate_model: str = "gpt-4.1-nano",
+        max_cycles: int = 50,
+        total_boxes: int = 2,
     ) -> None:
         self.box_id = box_id
         self.model = model
@@ -83,9 +85,12 @@ class BoxRunner:
         self.status_callback = status_callback
         self.specialist_domain = specialist_domain
         self.gate_model = gate_model
+        self.max_cycles = max_cycles
+        self.total_boxes = total_boxes
 
         self.state = BoxState(box_id=box_id)
         self.is_done = False
+        self._done_signaled = False  # Guard for idempotent _signal_done (FIX 6)
         self._cancelled = False
         self._last_processed_idx: int = 0
 
@@ -121,6 +126,25 @@ class BoxRunner:
                 await self._run_cycle(initial_context)
 
             while not self.is_done and not self._cancelled:
+                # ---- max_cycles enforcement (FIX 2) ----------------------
+                if self.state.current_cycle >= self.max_cycles:
+                    await self._update_status("concluding")
+                    if self.box_id == "box1":
+                        own_findings = self.state.findings
+                        if own_findings:
+                            own_context = self._build_context(own_findings)
+                            context = initial_context + "\n\nYour previous findings:\n" + own_context
+                        else:
+                            context = initial_context
+                    else:
+                        visible_events = self.visibility_filter(
+                            self.event_store.get_all_events()
+                        )
+                        context = self._build_context(visible_events)
+                    await self._run_cycle(context, conclude=True)
+                    await self._signal_done()
+                    break
+
                 # ---- Wait for new events --------------------------------
                 new_events = await self._collect_events(queue, timeout=5.0)
 
@@ -133,13 +157,34 @@ class BoxRunner:
                 )
 
                 if not new_events and self.state.current_cycle > 0:
-                    # No new work arrived.  If other boxes are done, wrap up.
-                    done_events = [
-                        e
+                    # Box 1 special handling (FIX 1): cycle on own findings
+                    if self.box_id == "box1":
+                        if self.is_done:
+                            break
+                        # Build context from initial question + own findings
+                        own_findings = self.state.findings
+                        if own_findings:
+                            own_context = self._build_context(own_findings)
+                            context = initial_context + "\n\nYour previous findings:\n" + own_context
+                        else:
+                            context = initial_context
+                        await self._update_status("thinking")
+                        await self._run_cycle(
+                            context, conclude=self.cost_tracker.should_conclude()
+                        )
+                        if self.is_done:
+                            break
+                        await self._update_status("waiting")
+                        continue
+
+                    # Non-Box-1: check if ALL other boxes are done (FIX 3)
+                    done_boxes = set(
+                        e.source_box
                         for e in self.event_store.get_all_events()
                         if e.event_type == "done" and e.source_box != self.box_id
-                    ]
-                    if done_events and self.box_id != "box1":
+                    )
+                    other_box_count = self.total_boxes - 1
+                    if len(done_boxes) >= other_box_count and other_box_count > 0:
                         if not self.is_done:
                             await self._update_status("concluding")
                             await self._run_cycle(
@@ -149,18 +194,21 @@ class BoxRunner:
                         break
                     continue
 
-                # ---- Specialist relevance gate ---------------------------
+                # ---- Specialist relevance gate (FIX 4) -------------------
                 if self.specialist_domain and visible_events:
-                    # Only gate-check events we haven't produced ourselves.
+                    own_events = [e for e in visible_events if e.source_box == self.box_id]
                     foreign_events = [
                         e
                         for e in visible_events
                         if e.source_box != self.box_id
                     ]
                     if foreign_events:
-                        visible_events = await self._check_relevance(foreign_events)
-                        if not visible_events:
+                        relevant_foreign = await self._check_relevance(foreign_events)
+                        visible_events = own_events + relevant_foreign
+                        if not relevant_foreign and not own_events:
                             continue
+                    else:
+                        visible_events = own_events
 
                 # ---- Budget checks ---------------------------------------
                 if self.cost_tracker.should_stop():
@@ -173,11 +221,16 @@ class BoxRunner:
 
                 # ---- Run a thinking cycle --------------------------------
                 await self._update_status("thinking")
-                context = (
-                    initial_context
-                    if self.box_id == "box1"
-                    else self._build_context(visible_events)
-                )
+                # Box 1 builds context from initial question + own findings (FIX 1)
+                if self.box_id == "box1":
+                    own_findings = self.state.findings
+                    if own_findings:
+                        own_context = self._build_context(own_findings)
+                        context = initial_context + "\n\nYour previous findings:\n" + own_context
+                    else:
+                        context = initial_context
+                else:
+                    context = self._build_context(visible_events)
                 await self._run_cycle(
                     context, conclude=self.cost_tracker.should_conclude()
                 )
@@ -240,8 +293,10 @@ class BoxRunner:
         context = self._maybe_summarize(context)
 
         # -- Assemble messages (system first, context last) ------------
+        # o4-mini (reasoning model) requires "developer" role (FIX 8)
+        system_role = "developer" if self.model == "o4-mini" else "system"
         messages: list[dict] = [
-            {"role": "system", "content": system},
+            {"role": system_role, "content": system},
             {"role": "user", "content": context if context else "Begin your analysis."},
         ]
 
@@ -305,10 +360,14 @@ class BoxRunner:
         self.state.total_input_tokens += usage.prompt_tokens
         self.state.total_output_tokens += usage.completion_tokens
 
+        # -- Sync cost from tracker (FIX 7) ----------------------------
+        box_cost = self.cost_tracker.box_costs.get(self.box_id)
+        if box_cost:
+            self.state.total_cost = box_cost.total_cost
+
         # -- Publish findings ------------------------------------------
         for event in events:
             if event.event_type == "done":
-                self.is_done = True
                 await self._signal_done()
             else:
                 await self.event_store.publish(event)
@@ -544,7 +603,10 @@ class BoxRunner:
     # ------------------------------------------------------------------
 
     async def _signal_done(self) -> None:
-        """Publish a ``done`` event and update state."""
+        """Publish a ``done`` event and update state (idempotent — FIX 6)."""
+        if self._done_signaled:
+            return  # Already signaled
+        self._done_signaled = True
         self.is_done = True
         self.state.status = "done"
         done_event = Event(

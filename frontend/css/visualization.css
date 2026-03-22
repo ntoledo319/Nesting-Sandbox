@@ -19,12 +19,16 @@
 }
 
 /* ---- Specialist Ring (Outermost) ---- */
+/* Old CSS class: .viz-specialist-ring */
+/* JS generates: .viz-outer */
 
-.viz-specialist-ring {
+.viz-specialist-ring,
+.viz-outer {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
     width: 100%;
     max-width: 480px;
     aspect-ratio: 1.5 / 1;
@@ -34,15 +38,60 @@
     animation: breathe 4s ease-in-out infinite;
 }
 
-.viz-specialist-ring.active {
+.viz-specialist-ring.active,
+.viz-outer.box-thinking {
     border-color: var(--specialist-color);
     box-shadow: 0 0 30px var(--specialist-glow);
     animation: pulse-border-specialist 2s ease-in-out infinite;
 }
 
-/* Specialist name pills positioned around the ring */
-.viz-specialist-pill {
+.viz-outer.box-done {
+    border-color: var(--specialist-color);
+    opacity: 0.7;
+    animation: none;
+}
+
+.viz-outer.box-idle {
+    border-color: var(--specialist-border);
+    animation: breathe 4s ease-in-out infinite;
+}
+
+.viz-outer.box-error {
+    border-color: var(--danger);
+    box-shadow: 0 0 20px rgba(226, 75, 74, 0.15);
+    animation: none;
+}
+
+.viz-outer.box-concluding {
+    border-color: var(--specialist-color);
+    box-shadow: 0 0 20px var(--specialist-glow);
+    animation: breathe 2s ease-in-out infinite;
+}
+
+/* Outer label (JS: .viz-outer-label) */
+.viz-outer-label {
     position: absolute;
+    top: 8px;
+    left: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--specialist-color);
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+
+/* ---- Specialist Pills ---- */
+/* Old CSS class: .viz-specialist-pill */
+/* JS generates: .spec-pill, .spec-dot, .spec-thinking, .spec-done */
+
+.viz-specialist-pill,
+.spec-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     padding: 3px 10px;
     font-family: var(--font-mono);
     font-size: 0.65rem;
@@ -52,18 +101,52 @@
     border: 1px solid var(--specialist-border);
     border-radius: 100px;
     white-space: nowrap;
-    z-index: 2;
     transition: all var(--duration-normal) var(--ease-out);
 }
 
-.viz-specialist-pill.active {
+.viz-specialist-pill.active,
+.spec-pill.spec-thinking {
     color: #fff;
     background: var(--specialist-color);
     border-color: var(--specialist-color);
     box-shadow: 0 0 12px var(--specialist-glow);
+    animation: pulse-fast 1.5s ease-in-out infinite;
 }
 
-/* Position pills around the ring edges */
+.spec-pill.spec-done {
+    color: var(--success);
+    border-color: var(--success);
+    background: rgba(93, 202, 122, 0.08);
+}
+
+.spec-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--specialist-color);
+    display: inline-block;
+}
+
+.spec-pill.spec-thinking .spec-dot {
+    background: #fff;
+    animation: pulse-fast 1s ease-in-out infinite;
+}
+
+.spec-pill.spec-done .spec-dot {
+    background: var(--success);
+}
+
+/* Spec pills row — shown below the middle box */
+.spec-pills-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    padding: 10px 12px 6px;
+    margin-top: auto;
+}
+
+/* Position pills around the ring edges (legacy absolute positioned) */
 .viz-specialist-pill:nth-child(1) { top: -10px; left: 20%; }
 .viz-specialist-pill:nth-child(2) { top: -10px; right: 20%; }
 .viz-specialist-pill:nth-child(3) { right: -6px; top: 30%; transform: translateX(50%); }
@@ -75,8 +158,11 @@
 
 
 /* ---- Box 2 (Teal / Outer Box) ---- */
+/* Old CSS class: .viz-box2 */
+/* JS generates: .viz-middle */
 
-.viz-box2 {
+.viz-box2,
+.viz-middle {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -90,7 +176,16 @@
     transition: all var(--duration-normal) var(--ease-out);
 }
 
-.viz-box2.thinking {
+/* When no specialist outer ring, middle is the outermost */
+.viz-middle.no-outer {
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 1.5 / 1;
+    border-radius: var(--radius-xl);
+}
+
+.viz-box2.thinking,
+.viz-middle.box-thinking {
     border-color: var(--box2-color);
     box-shadow:
         0 0 20px var(--box2-glow),
@@ -98,12 +193,33 @@
     animation: pulse-border-box2 2.5s ease-in-out infinite;
 }
 
-.viz-box2.complete {
+.viz-box2.complete,
+.viz-middle.box-done {
     border-color: var(--box2-color);
     opacity: 0.7;
+    animation: none;
 }
 
-.viz-box2-label {
+.viz-middle.box-idle {
+    border-color: var(--box2-border);
+    animation: none;
+}
+
+.viz-middle.box-error {
+    border-color: var(--danger);
+    box-shadow: 0 0 20px rgba(226, 75, 74, 0.15);
+    animation: none;
+}
+
+.viz-middle.box-concluding {
+    border-color: var(--box2-color);
+    box-shadow: 0 0 20px var(--box2-glow);
+    animation: breathe 2s ease-in-out infinite;
+}
+
+/* Middle label (JS: .viz-middle-label) */
+.viz-box2-label,
+.viz-middle-label {
     position: absolute;
     top: 8px;
     left: 12px;
@@ -114,6 +230,16 @@
     color: var(--box2-color);
     text-transform: uppercase;
     opacity: 0.8;
+}
+
+/* Middle meta (JS: .viz-middle-meta) */
+.viz-middle-meta {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--text-tertiary);
 }
 
 .viz-box2-status {
@@ -151,8 +277,11 @@
 
 
 /* ---- Box 1 (Coral / Inner Box) ---- */
+/* Old CSS class: .viz-box1 */
+/* JS generates: .viz-inner */
 
-.viz-box1 {
+.viz-box1,
+.viz-inner {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -166,7 +295,8 @@
     transition: all var(--duration-normal) var(--ease-out);
 }
 
-.viz-box1.thinking {
+.viz-box1.thinking,
+.viz-inner.box-thinking {
     border-color: var(--box1-color);
     box-shadow:
         0 0 20px var(--box1-glow),
@@ -174,15 +304,41 @@
     animation: pulse-border-box1 2s ease-in-out infinite;
 }
 
-.viz-box1.complete {
+.viz-box1.complete,
+.viz-inner.box-done {
     border-color: var(--box1-color);
     opacity: 0.7;
+    animation: none;
 }
 
-.viz-box1-label {
-    position: absolute;
-    top: 6px;
-    left: 10px;
+.viz-inner.box-idle {
+    border-color: var(--box1-border);
+    animation: none;
+}
+
+.viz-inner.box-error {
+    border-color: var(--danger);
+    box-shadow: 0 0 20px rgba(226, 75, 74, 0.15);
+    animation: none;
+}
+
+.viz-inner.box-concluding {
+    border-color: var(--box1-color);
+    box-shadow: 0 0 20px var(--box1-glow);
+    animation: breathe 2s ease-in-out infinite;
+}
+
+/* Inner icon (JS: .viz-inner-icon) */
+.viz-center-icon,
+.viz-inner-icon {
+    font-size: 1.4rem;
+    margin-bottom: 4px;
+    opacity: 0.6;
+}
+
+/* Inner label (JS: .viz-inner-label) */
+.viz-box1-label,
+.viz-inner-label {
     font-family: var(--font-mono);
     font-size: 0.58rem;
     font-weight: 700;
@@ -190,6 +346,24 @@
     color: var(--box1-color);
     text-transform: uppercase;
     opacity: 0.8;
+}
+
+/* Inner meta (JS: .viz-inner-meta) */
+.viz-inner-meta {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+}
+
+/* Inner status dots (JS: .viz-inner-status) */
+.viz-inner-status {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    color: var(--box1-color);
+    letter-spacing: 2px;
+    margin-top: 4px;
+    opacity: 0.7;
 }
 
 .viz-box1-status {
@@ -226,17 +400,11 @@
 }
 
 
-/* ---- Center Content (inside Box 1) ---- */
+/* ---- Center Content (inside Box 1 - legacy) ---- */
 
 .viz-center-content {
     text-align: center;
     padding: 8px;
-}
-
-.viz-center-icon {
-    font-size: 1.4rem;
-    margin-bottom: 4px;
-    opacity: 0.6;
 }
 
 .viz-center-label {
@@ -248,6 +416,24 @@
 
 .viz-center-label.active {
     color: var(--box1-color);
+}
+
+
+/* ---- Flash Effect (JS: .box-flash) ---- */
+
+.box-flash {
+    animation: viz-box-flash 600ms ease-out !important;
+}
+
+@keyframes viz-box-flash {
+    0% {
+        filter: brightness(1.3);
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.15);
+    }
+    100% {
+        filter: brightness(1);
+        box-shadow: none;
+    }
 }
 
 
@@ -313,17 +499,20 @@
 
 /* ---- Idle State ---- */
 
-.box-viz-container.idle .viz-specialist-ring {
+.box-viz-container.idle .viz-specialist-ring,
+.box-viz-container.idle .viz-outer {
     border-color: var(--border-subtle);
     background: transparent;
 }
 
-.box-viz-container.idle .viz-box2 {
+.box-viz-container.idle .viz-box2,
+.box-viz-container.idle .viz-middle {
     border-color: var(--border-subtle);
     background: transparent;
 }
 
-.box-viz-container.idle .viz-box1 {
+.box-viz-container.idle .viz-box1,
+.box-viz-container.idle .viz-inner {
     border-color: var(--border-subtle);
     background: transparent;
 }

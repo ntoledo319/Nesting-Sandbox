@@ -44,6 +44,11 @@ class CostTracker:
         """Register *callback* to be invoked with a snapshot after every cost update."""
         self._callbacks.append(callback)
 
+    def remove_callback(self, callback: Callable) -> None:
+        """Remove a previously-registered update callback (no-op if absent — FIX 12)."""
+        if callback in self._callbacks:
+            self._callbacks.remove(callback)
+
     # ------------------------------------------------------------------
     # Recording
     # ------------------------------------------------------------------

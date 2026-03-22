@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional
 import uuid
@@ -10,12 +10,26 @@ class SpecialistConfig(BaseModel):
 
 
 class RunConfig(BaseModel):
-    question: str
+    question: str = Field(min_length=1, max_length=100000)
     documents: list[str] = []  # Document text content
     specialists: list[SpecialistConfig] = []
-    budget_cap: float = 10.0  # USD
-    max_cycles: int = 50  # Safety limit even with budget
+    budget_cap: float = Field(default=10.0, gt=0)  # USD
+    max_cycles: int = Field(default=50, ge=1, le=200)  # Safety limit even with budget
     api_key: Optional[str] = None  # Optional per-run API key
+
+    @field_validator('specialists')
+    @classmethod
+    def limit_specialists(cls, v):
+        if len(v) > 20:
+            raise ValueError('Maximum 20 specialists allowed')
+        return v
+
+    @field_validator('budget_cap')
+    @classmethod
+    def cap_budget(cls, v):
+        if v > 100.0:
+            raise ValueError('Budget cap cannot exceed $100.00')
+        return v
 
 
 class Event(BaseModel):
@@ -24,7 +38,7 @@ class Event(BaseModel):
     source_box: str  # "box1", "box2", "specialist:Legal Implications"
     event_type: str  # "hypothesis", "evidence", "conclusion", "dead_end", "question", "connection", "done"
     content: str
-    metadata: dict = {}  # token counts, model used, cycle number, etc.
+    metadata: dict = Field(default_factory=dict)  # token counts, model used, cycle number, etc.
 
 
 class BoxState(BaseModel):

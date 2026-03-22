@@ -1,8 +1,10 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
     openai_api_key: Optional[str] = None
     host: str = "0.0.0.0"
     port: int = 8000
@@ -19,10 +21,6 @@ class Settings(BaseSettings):
 
     # Box1 reasoning token cap per cycle
     box1_max_completion_tokens: int = 16384
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 
 
 settings = Settings()

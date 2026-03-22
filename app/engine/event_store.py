@@ -31,17 +31,27 @@ class EventStore:
         The sender (``event.source_box``) is **not** echoed back to its
         own subscription queue.
         """
+        # Snapshot collections under the lock to avoid race conditions
+        # with concurrent unsubscribe / remove_ws_callback (FIX 5).
         async with self._lock:
             self.events.append(event)
+            subs = list(self.subscribers.items())
+            cbs = list(self._ws_callbacks)
 
         # Fan-out to box subscribers (skip the sender)
-        for sub_id, queue in self.subscribers.items():
+        for sub_id, queue in subs:
             if sub_id != event.source_box:
-                await queue.put(event)
+                try:
+                    await queue.put(event)
+                except Exception:
+                    pass
 
         # Fan-out to WebSocket broadcast callbacks
-        for cb in self._ws_callbacks:
-            await cb(event)
+        for cb in cbs:
+            try:
+                await cb(event)
+            except Exception:
+                pass
 
     # ------------------------------------------------------------------
     # Subscriptions

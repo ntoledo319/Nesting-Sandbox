@@ -6,6 +6,8 @@ class Renderer {
     constructor() {
         /** @type {string|null} Active feed filter (box ID or null for "all") */
         this.feedFilter = null;
+        /** @type {Map<string, string>} Full content cache for expandable feed items */
+        this._fullContent = new Map();
     }
 
     /* --------------------------------------------------------
@@ -24,10 +26,10 @@ class Renderer {
         card.innerHTML = `
             <div class="specialist-card-header">
                 <span class="specialist-dot">\u25c8</span>
-                <span class="specialist-name">${spec.name}</span>
-                <button class="specialist-remove" data-name="${spec.name}" title="Remove">\u2715</button>
+                <span class="specialist-name">${escapeHtml(spec.name)}</span>
+                <button class="specialist-remove" data-name="${escapeHtml(spec.name)}" title="Remove">\u2715</button>
             </div>
-            <p class="specialist-desc">${truncate(spec.description, 100)}</p>
+            <p class="specialist-desc">${escapeHtml(truncate(spec.description, 100))}</p>
         `;
         return card;
     }
@@ -82,7 +84,7 @@ class Renderer {
         // Warnings
         const warningsEl = document.getElementById('estimateWarnings');
         if (estimate.warnings && estimate.warnings.length > 0) {
-            warningsEl.innerHTML = estimate.warnings.map(w => `<div class="estimate-warning">\u26a0 ${w}</div>`).join('');
+            warningsEl.innerHTML = estimate.warnings.map(w => `<div class="estimate-warning">\u26a0 ${escapeHtml(w)}</div>`).join('');
         } else {
             warningsEl.innerHTML = '';
         }
@@ -102,9 +104,9 @@ class Renderer {
             : (file.size / 1024).toFixed(1) + 'KB';
         item.innerHTML = `
             <span class="file-icon">\ud83d\udcc4</span>
-            <span class="file-name">${file.name}</span>
+            <span class="file-name">${escapeHtml(file.name)}</span>
             <span class="file-size">(${size})</span>
-            <button class="file-remove" data-name="${file.name}">\u2715</button>
+            <button class="file-remove" data-name="${escapeHtml(file.name)}">\u2715</button>
         `;
         return item;
     }
@@ -132,12 +134,16 @@ class Renderer {
         item.innerHTML = `
             <div class="feed-item-header">
                 <span class="feed-dot color-${colorClass}"></span>
-                <span class="feed-source color-${colorClass}">${shortName}</span>
+                <span class="feed-source color-${colorClass}">${escapeHtml(shortName)}</span>
                 <span class="feed-type">${eventTypeLabel(event.event_type)}</span>
             </div>
             <div class="feed-item-content">${renderMarkdown(displayContent)}</div>
-            ${expanded ? `<button class="feed-expand" onclick="this.previousElementSibling.innerHTML=renderMarkdown(this.dataset.full);this.remove()" data-full="${event.content.replace(/"/g, '&quot;')}">Show more</button>` : ''}
+            ${expanded ? `<button class="feed-expand" data-event-id="${event.id}">Show more</button>` : ''}
         `;
+
+        if (expanded) {
+            this._fullContent.set(event.id, event.content);
+        }
 
         // Remove enter animation class after animation completes
         setTimeout(() => item.classList.remove('feed-item-enter'), 500);
@@ -159,6 +165,18 @@ class Renderer {
         const item = this.renderFeedItem(event);
         feed.appendChild(item);
 
+        // Bind expand button if present
+        const expandBtn = item.querySelector('.feed-expand');
+        if (expandBtn) {
+            expandBtn.addEventListener('click', () => {
+                const full = this._fullContent.get(event.id);
+                if (full) {
+                    item.querySelector('.feed-item-content').innerHTML = renderMarkdown(full);
+                    expandBtn.remove();
+                }
+            });
+        }
+
         // Auto-scroll
         feed.scrollTop = feed.scrollHeight;
     }
@@ -176,7 +194,7 @@ class Renderer {
             if (id.startsWith('gate:')) continue;
             const colorClass = getBoxColorClass(id);
             const name = getBoxShortName(id);
-            html += `<button class="filter-btn color-${colorClass}" data-filter="${id}">${name}</button>`;
+            html += `<button class="filter-btn color-${colorClass}" data-filter="${escapeHtml(id)}">${escapeHtml(name)}</button>`;
         }
         container.innerHTML = html;
     }
@@ -223,14 +241,14 @@ class Renderer {
 
         card.className = 'report-card';
         card.innerHTML = `
-            <div class="report-card-header color-${colorClass}-border" onclick="this.parentElement.classList.toggle('expanded')">
+            <div class="report-card-header color-${colorClass}-border">
                 <div class="report-card-title">
                     <span class="report-dot color-${colorClass}"></span>
-                    <h3>${displayName}</h3>
+                    <h3>${escapeHtml(displayName)}</h3>
                 </div>
                 <div class="report-card-stats">
                     <span class="mono">${formatCost(report.cost || 0)}</span>
-                    <span class="mono">${formatNumber(report.input_tokens + report.output_tokens)} tokens</span>
+                    <span class="mono">${formatNumber((report.input_tokens || 0) + (report.output_tokens || 0))} tokens</span>
                     <span class="mono">${report.cycles || 0} cycles</span>
                 </div>
                 <span class="report-card-toggle">\u25be</span>
@@ -280,7 +298,7 @@ class Renderer {
             const receiptCard = document.createElement('div');
             receiptCard.className = 'report-card expanded';
             receiptCard.innerHTML = `
-                <div class="report-card-header" onclick="this.parentElement.classList.toggle('expanded')">
+                <div class="report-card-header">
                     <div class="report-card-title">
                         <span class="report-dot" style="background: var(--cost-color)"></span>
                         <h3>Cost Receipt</h3>
@@ -293,7 +311,7 @@ class Renderer {
                         <tbody>
                             ${(report.receipt.per_box_breakdown || []).map(b => `
                                 <tr>
-                                    <td class="mono">${getBoxShortName(b.box_id)}</td>
+                                    <td class="mono">${escapeHtml(getBoxShortName(b.box_id))}</td>
                                     <td class="mono">${formatNumber(b.input_tokens)}</td>
                                     <td class="mono">${formatNumber(b.output_tokens)}</td>
                                     <td class="mono">${formatNumber(b.reasoning_tokens)}</td>

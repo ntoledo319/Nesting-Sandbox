@@ -1,13 +1,13 @@
-import json
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from app.engine.report_generator import generate_full_report, generate_box_report, generate_receipt
 
 router = APIRouter()
 
 @router.get("/runs/{run_id}/report")
 async def get_report(run_id: str, request: Request):
-    """Get the full report for a completed run."""
+    """Get the full report for a run (completed or in-progress)."""
     run_manager = request.app.state.run_manager
     run_state = run_manager.get_run(run_id)
     if not run_state:
@@ -16,11 +16,14 @@ async def get_report(run_id: str, request: Request):
     cost_tracker = run_manager.get_cost_tracker(run_id)
     event_store = run_manager.get_event_store(run_id)
 
-    # Make sure events are populated
-    if event_store and not run_state.events:
-        run_state.events = event_store.get_all_events()
+    # Use events from the right source without mutating shared state
+    events = run_state.events if run_state.events else (
+        event_store.get_all_events() if event_store else []
+    )
 
-    report = generate_full_report(run_state, cost_tracker)
+    report = generate_full_report(run_state, cost_tracker, events)
+    if run_state.status == "running":
+        report["partial"] = True
     return report
 
 @router.get("/runs/{run_id}/report/download")
@@ -34,13 +37,15 @@ async def download_report(run_id: str, request: Request):
     cost_tracker = run_manager.get_cost_tracker(run_id)
     event_store = run_manager.get_event_store(run_id)
 
-    if event_store and not run_state.events:
-        run_state.events = event_store.get_all_events()
+    # Use events from the right source without mutating shared state
+    events = run_state.events if run_state.events else (
+        event_store.get_all_events() if event_store else []
+    )
 
-    report = generate_full_report(run_state, cost_tracker)
+    report = generate_full_report(run_state, cost_tracker, events)
 
     return JSONResponse(
-        content=report,
+        content=jsonable_encoder(report),
         headers={
             "Content-Disposition": f"attachment; filename=nesting-sandbox-{run_id[:8]}.json"
         }

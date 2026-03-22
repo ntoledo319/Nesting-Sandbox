@@ -437,11 +437,22 @@
     }
 
     .viz-box1.thinking,
-    .viz-box2.thinking {
+    .viz-box2.thinking,
+    .viz-inner.box-thinking,
+    .viz-middle.box-thinking {
         animation: none;
     }
 
-    .viz-specialist-ring.active {
+    .viz-specialist-ring.active,
+    .viz-outer.box-thinking {
         animation: none;
+    }
+
+    .spec-pill.spec-thinking {
+        animation: none;
+    }
+
+    .box-flash {
+        animation: none !important;
     }
 }

@@ -156,9 +156,35 @@ const App = {
             const removeBtn = e.target.closest('.file-remove');
             if (removeBtn) {
                 const name = removeBtn.dataset.name;
-                this.documents = this.documents.filter(d => d.name !== name);
-                this.documentTexts = this.documentTexts.filter((_, i) => this.documents[i]?.name !== name);
+                const idx = this.documents.findIndex(d => d.name === name);
+                if (idx !== -1) {
+                    this.documents.splice(idx, 1);
+                    this.documentTexts.splice(idx, 1);
+                }
                 this.renderFileList();
+            }
+        });
+
+        // Report card expand/collapse and individual download (delegated)
+        document.getElementById('reportCards')?.addEventListener('click', (e) => {
+            const header = e.target.closest('.report-card-header');
+            if (header) {
+                header.parentElement.classList.toggle('expanded');
+            }
+
+            const dlBtn = e.target.closest('.report-download');
+            if (dlBtn && this.currentReport) {
+                const boxId = dlBtn.dataset.box;
+                const boxReport = this.currentReport.box_reports?.find(r => r.box_id === boxId);
+                if (boxReport) {
+                    const blob = new Blob([boxReport.report_markdown || JSON.stringify(boxReport, null, 2)], { type: 'text/markdown' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${boxId.replace(/[^a-z0-9]/gi, '-')}-report.md`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
             }
         });
     },
@@ -206,6 +232,10 @@ const App = {
         });
 
         this.ws.on('run_complete', (data) => {
+            if (this._stopFallback) {
+                clearTimeout(this._stopFallback);
+                this._stopFallback = null;
+            }
             this.fetchResults();
         });
 
@@ -332,8 +362,12 @@ const App = {
             });
 
             if (!resp.ok) {
-                const err = await resp.json();
-                alert(err.detail || 'Failed to start run');
+                let detail = 'Failed to start run';
+                try {
+                    const err = await resp.json();
+                    detail = err.detail || detail;
+                } catch {}
+                alert(detail);
                 return;
             }
 
@@ -362,7 +396,9 @@ const App = {
         if (!this.runId) return;
         try {
             await fetch(`/api/runs/${this.runId}/stop`, { method: 'POST' });
-            this.fetchResults();
+            // Don't call fetchResults immediately — wait for run_complete WS message
+            // Add a fallback timeout in case WS message never arrives
+            this._stopFallback = setTimeout(() => this.fetchResults(), 5000);
         } catch (e) {
             console.error('Stop error:', e);
         }
@@ -389,11 +425,15 @@ const App = {
         if (!this.runId) return;
         try {
             const resp = await fetch(`/api/runs/${this.runId}/report`);
-            if (resp.ok) {
-                const report = await resp.json();
-                this.currentReport = report;
-                this.showResults(report);
+            if (!resp.ok) {
+                console.error('Failed to fetch results:', resp.status);
+                // Retry after delay
+                setTimeout(() => this.fetchResults(), 3000);
+                return;
             }
+            const report = await resp.json();
+            this.currentReport = report;
+            this.showResults(report);
         } catch (e) {
             console.error('Fetch results error:', e);
         }
@@ -411,6 +451,8 @@ const App = {
         this.events = [];
         this.boxStates = {};
         this.currentReport = null;
+        this.renderer.feedFilter = null;
+        this.renderer._fullContent?.clear();
         this.costDisplay.reset();
         document.getElementById('headerStop').classList.add('hidden');
         document.getElementById('liveFeed').innerHTML = '';
@@ -421,6 +463,10 @@ const App = {
         if (!this.runId) return;
         try {
             const resp = await fetch(`/api/runs/${this.runId}/report/download`);
+            if (!resp.ok) {
+                console.error('Download failed:', resp.status);
+                return;
+            }
             const blob = await resp.blob();
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');

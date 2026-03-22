@@ -353,6 +353,48 @@
     background: rgba(226, 75, 74, 0.1);
 }
 
+/* --- JS-generated file item class names (Fix #9) --- */
+.file-icon {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+}
+
+.file-name {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-size {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+}
+
+.file-remove {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    transition: all var(--duration-fast);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.file-remove:hover {
+    color: var(--danger);
+    background: rgba(226, 75, 74, 0.1);
+}
+
 
 /* ================================================
    SPECIALIST GRID & CARDS
@@ -419,6 +461,63 @@
 .specialist-card-remove:hover {
     color: var(--danger);
     background: rgba(226, 75, 74, 0.15);
+}
+
+/* --- JS-generated specialist card class names (Fix #2) --- */
+.specialist-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.specialist-dot {
+    color: var(--specialist-color);
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.specialist-name {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--specialist-color);
+}
+
+.specialist-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    color: var(--text-tertiary);
+    opacity: 0;
+    transition: all var(--duration-fast);
+    cursor: pointer;
+}
+
+.specialist-card:hover .specialist-remove {
+    opacity: 1;
+}
+
+.specialist-remove:hover {
+    color: var(--danger);
+    background: rgba(226, 75, 74, 0.15);
+}
+
+.specialist-desc {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 
@@ -575,17 +674,27 @@
     transition: all var(--duration-fast);
 }
 
-.complexity-dot.active {
+.complexity-dot.active,
+.complexity-dot.filled {
     background: var(--cost-color);
     border-color: var(--cost-color);
     box-shadow: 0 0 6px rgba(239, 159, 39, 0.4);
+}
+
+/* Fix #8: Complexity label (JS-generated) */
+.complexity-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-tertiary);
+    margin-left: 6px;
 }
 
 .estimate-warnings {
     margin-top: 4px;
 }
 
-.estimate-warning-item {
+.estimate-warning-item,
+.estimate-warning {
     font-size: 0.78rem;
     color: var(--warning);
     padding: 6px 10px;
@@ -806,6 +915,111 @@
     animation: slide-in-bottom 300ms var(--ease-out), ripple-flash 400ms ease-out;
 }
 
+/* --- JS-generated feed item class names (Fix #3) --- */
+
+/* Entry animation class */
+.feed-item-enter {
+    animation: slide-in-bottom 300ms var(--ease-out);
+}
+
+/* Short-name dot (no "item" prefix) */
+.feed-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+}
+
+.feed-dot.color-box1 {
+    background: var(--box1-color);
+    box-shadow: 0 0 6px var(--box1-glow);
+}
+
+.feed-dot.color-box2 {
+    background: var(--box2-color);
+    box-shadow: 0 0 6px var(--box2-glow);
+}
+
+.feed-dot.color-specialist {
+    background: var(--specialist-color);
+    box-shadow: 0 0 6px var(--specialist-glow);
+}
+
+/* Short-name source (no "item" prefix) */
+.feed-source {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.feed-source.color-box1 { color: var(--box1-color); }
+.feed-source.color-box2 { color: var(--box2-color); }
+.feed-source.color-specialist { color: var(--specialist-color); }
+
+/* Short-name type (no "item" prefix) */
+.feed-type {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+    margin-left: auto;
+}
+
+/* Content wrapper (JS uses feed-item-content instead of feed-item-text) */
+.feed-item-content {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+.feed-item-content.thinking {
+    font-style: italic;
+    color: var(--text-tertiary);
+}
+
+/* Expand button */
+.feed-expand {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--specialist-color);
+    cursor: pointer;
+    padding: 2px 0;
+    margin-top: 4px;
+    background: none;
+    border: none;
+    transition: color var(--duration-fast);
+}
+
+.feed-expand:hover {
+    color: #8f87e7;
+}
+
+/* --- JS-generated filter button class (Fix #4) --- */
+.filter-btn {
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    border-radius: 100px;
+    color: var(--text-tertiary);
+    background: transparent;
+    border: 1px solid transparent;
+    transition: all var(--duration-fast);
+    cursor: pointer;
+}
+
+.filter-btn:hover {
+    color: var(--text-secondary);
+    background: var(--bg-hover);
+}
+
+.filter-btn.active {
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    border-color: var(--border-default);
+}
+
 
 /* ================================================
    REPORT CARDS (Results)
@@ -879,6 +1093,53 @@
 
 .report-card.expanded .report-card-chevron {
     transform: rotate(90deg);
+}
+
+/* --- JS-generated report card class names (Fix #5 & #13) --- */
+.report-card-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.report-card-title h3 {
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.report-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.report-dot.color-box1 { background: var(--box1-color); }
+.report-dot.color-box2 { background: var(--box2-color); }
+.report-dot.color-specialist { background: var(--specialist-color); }
+
+.report-card-toggle {
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    transition: transform var(--duration-fast);
+    margin-left: 12px;
+}
+
+.report-card.expanded .report-card-toggle {
+    transform: rotate(180deg);
+}
+
+.report-card-meta {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-tertiary);
+    padding: 8px 0 4px;
+}
+
+.report-download {
+    margin-top: 12px;
 }
 
 .report-card-body {
@@ -1004,6 +1265,24 @@
     background: var(--danger);
 }
 
+/* --- JS-generated cost bar state classes (Fix #11) --- */
+.cost-bar-ok {
+    background: var(--cost-color);
+}
+
+.cost-bar-warning {
+    background: var(--warning);
+}
+
+.cost-bar-danger {
+    background: var(--danger);
+}
+
+.cost-bar-critical {
+    background: var(--danger);
+    animation: pulse-fast 0.8s ease-in-out infinite;
+}
+
 .cost-details {
     display: flex;
     flex-direction: column;
@@ -1069,6 +1348,59 @@
     flex-shrink: 0;
 }
 
+/* --- JS-generated cost bar class names (Fix #1) --- */
+.box-cost-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.box-cost-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    min-width: 48px;
+    flex-shrink: 0;
+}
+
+.box-cost-track {
+    flex: 1;
+    height: 3px;
+    background: var(--bg-hover);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.box-cost-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 500ms var(--ease-out);
+}
+
+.box-cost-value {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+    min-width: 48px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* Color classes used by JS: color-box1, color-box2, color-specialist */
+.color-box1 { color: var(--box1-color); }
+.color-box2 { color: var(--box2-color); }
+.color-specialist { color: var(--specialist-color); }
+
+/* Background color classes: color-box1-bg, color-box2-bg, color-specialist-bg */
+.color-box1-bg { background: var(--box1-color); }
+.color-box2-bg { background: var(--box2-color); }
+.color-specialist-bg { background: var(--specialist-color); }
+
+/* Border color classes (used by report cards) */
+.color-box1-border { border-left: 3px solid var(--box1-color); }
+.color-box2-border { border-left: 3px solid var(--box2-color); }
+.color-specialist-border { border-left: 3px solid var(--specialist-color); }
+
 /* Conclude Banner */
 .conclude-banner {
     margin-top: 12px;
@@ -1116,6 +1448,63 @@
     color: var(--specialist-color);
     background: var(--specialist-bg);
     border: 1px solid var(--specialist-border);
+}
+
+
+/* ================================================
+   RECEIPT TABLE (Fix #12)
+   ================================================ */
+
+.receipt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    margin-top: 12px;
+}
+
+.receipt-table th,
+.receipt-table td {
+    padding: 8px 12px;
+    text-align: right;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.receipt-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-default);
+}
+
+.receipt-table td {
+    color: var(--text-tertiary);
+}
+
+.receipt-table td:first-child,
+.receipt-table th:first-child {
+    text-align: left;
+}
+
+.receipt-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.receipt-table tfoot td {
+    border-top: 1px solid var(--border-default);
+    border-bottom: none;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.receipt-duration {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin-top: 10px;
+    text-align: right;
 }
 
 

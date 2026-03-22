@@ -3,12 +3,27 @@
    ============================================================ */
 
 /**
+ * Escape HTML special characters to prevent XSS.
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/**
  * Format a dollar amount to two decimal places.
  * @param {number} amount
  * @returns {string}
  */
 function formatCost(amount) {
-    return '$' + amount.toFixed(2);
+    return '$' + (amount || 0).toFixed(2);
 }
 
 /**
@@ -17,6 +32,7 @@ function formatCost(amount) {
  * @returns {string}
  */
 function formatNumber(n) {
+    n = n || 0;
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
     return n.toString();
@@ -72,6 +88,7 @@ function debounce(fn, ms) {
  * @param {Function}    formatter Formatting function (default formatCost)
  */
 function animateNumber(element, from, to, duration = 500, formatter = formatCost) {
+    if (element._animFrame) cancelAnimationFrame(element._animFrame);
     const start = performance.now();
     const diff = to - from;
 
@@ -81,9 +98,13 @@ function animateNumber(element, from, to, duration = 500, formatter = formatCost
         const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
         const current = from + diff * eased;
         element.textContent = formatter(current);
-        if (progress < 1) requestAnimationFrame(update);
+        if (progress < 1) {
+            element._animFrame = requestAnimationFrame(update);
+        } else {
+            element._animFrame = null;
+        }
     }
-    requestAnimationFrame(update);
+    element._animFrame = requestAnimationFrame(update);
 }
 
 /**
@@ -127,7 +148,7 @@ function getBoxShortName(boxId) {
  * @returns {string}
  */
 function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
 /**

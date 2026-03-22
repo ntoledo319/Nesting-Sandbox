@@ -10,6 +10,7 @@ class BoxVisualization {
         this.container = document.getElementById(containerId);
         this.boxes = {};
         this.specialists = [];
+        this._flashTimers = {};
     }
 
     /**
@@ -64,11 +65,13 @@ class BoxVisualization {
      * @param {string} boxId
      */
     flashBox(boxId) {
-        const el = this.container.querySelector(`[data-box="${boxId}"]`);
-        if (el) {
-            el.classList.add('box-flash');
-            setTimeout(() => el.classList.remove('box-flash'), 600);
-        }
+        // Set flash state and re-render
+        this._flashTimers[boxId] = true;
+        this.render();
+        setTimeout(() => {
+            delete this._flashTimers[boxId];
+            this.render();
+        }, 600);
     }
 
     /**
@@ -95,10 +98,10 @@ class BoxVisualization {
             specsHtml = `
                 <div class="viz-outer ${this._statusAnim('specialist')}" data-box="specialists">
                     <div class="viz-outer-label">Specialists</div>
-                    <div class="viz-middle ${this._boxAnim(box2.status)}" data-box="box2">
+                    <div class="viz-middle ${this._boxAnim(box2.status, 'box2')}" data-box="box2">
                         <div class="viz-middle-label">Box 2 \u00b7 Extrapolator</div>
                         <div class="viz-middle-meta">cycle ${box2.cycle} \u00b7 ${box2.status}</div>
-                        <div class="viz-inner ${this._boxAnim(box1.status)}" data-box="box1">
+                        <div class="viz-inner ${this._boxAnim(box1.status, 'box1')}" data-box="box1">
                             <div class="viz-inner-icon">\u25c8</div>
                             <div class="viz-inner-label">Box 1 \u00b7 Solver</div>
                             <div class="viz-inner-meta">cycle ${box1.cycle}</div>
@@ -110,10 +113,10 @@ class BoxVisualization {
             `;
         } else {
             specsHtml = `
-                <div class="viz-middle no-outer ${this._boxAnim(box2.status)}" data-box="box2">
+                <div class="viz-middle no-outer ${this._boxAnim(box2.status, 'box2')}" data-box="box2">
                     <div class="viz-middle-label">Box 2 \u00b7 Extrapolator</div>
                     <div class="viz-middle-meta">cycle ${box2.cycle} \u00b7 ${box2.status}</div>
-                    <div class="viz-inner ${this._boxAnim(box1.status)}" data-box="box1">
+                    <div class="viz-inner ${this._boxAnim(box1.status, 'box1')}" data-box="box1">
                         <div class="viz-inner-icon">\u25c8</div>
                         <div class="viz-inner-label">Box 1 \u00b7 Solver</div>
                         <div class="viz-inner-meta">cycle ${box1.cycle}</div>
@@ -132,12 +135,14 @@ class BoxVisualization {
      * @param {string} status
      * @returns {string}
      */
-    _boxAnim(status) {
-        if (status === 'thinking') return 'box-thinking';
-        if (status === 'concluding') return 'box-concluding';
-        if (status === 'done') return 'box-done';
-        if (status === 'error') return 'box-error';
-        return 'box-idle';
+    _boxAnim(status, boxId) {
+        let classes = '';
+        if (boxId && this._flashTimers[boxId]) classes += ' box-flash';
+        if (status === 'thinking') return 'box-thinking' + classes;
+        if (status === 'concluding') return 'box-concluding' + classes;
+        if (status === 'done') return 'box-done' + classes;
+        if (status === 'error') return 'box-error' + classes;
+        return 'box-idle' + classes;
     }
 
     /**

@@ -20,6 +20,7 @@ class WSManager {
     connect(runId) {
         this.runId = runId;
         this.reconnectAttempts = 0;
+        this.maxReconnect = 5;  // Reset on new connection
         this._connect();
     }
 

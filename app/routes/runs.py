@@ -1,21 +1,30 @@
+import asyncio
 from fastapi import APIRouter, HTTPException, Request
 from app.models import RunConfig, CostEstimate
+from app.config import settings
 from app.engine.cost_estimator import estimate_run_cost
 from openai import AsyncOpenAI
 
 router = APIRouter()
+_run_lock = asyncio.Lock()
 
 @router.post("/runs")
 async def create_run(config: RunConfig, request: Request):
     """Start a new run."""
     run_manager = request.app.state.run_manager
 
-    # Check concurrent run limit
-    active = sum(1 for r in run_manager.active_runs.values() if r.status == "running")
-    if active >= 3:
-        raise HTTPException(status_code=429, detail="Max concurrent runs reached")
+    # Validate budget cap against server-side maximum
+    if config.budget_cap > settings.max_budget_cap:
+        raise HTTPException(status_code=422, detail=f"Budget cap cannot exceed ${settings.max_budget_cap}")
 
-    run_state = await run_manager.start_run(config)
+    async with _run_lock:
+        # Check concurrent run limit
+        active = sum(1 for r in run_manager.active_runs.values() if r.status == "running")
+        if active >= settings.max_concurrent_runs:
+            raise HTTPException(status_code=429, detail="Max concurrent runs reached")
+
+        run_state = await run_manager.start_run(config)
+
     return {
         "run_id": run_state.run_id,
         "status": run_state.status,
