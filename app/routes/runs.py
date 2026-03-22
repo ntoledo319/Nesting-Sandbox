@@ -67,6 +67,12 @@ async def stop_run(run_id: str, request: Request):
 async def estimate_cost(config: RunConfig):
     """Get pre-run cost estimate."""
     api_key = config.api_key
-    client = AsyncOpenAI(api_key=api_key) if api_key else AsyncOpenAI()
-    estimate = await estimate_run_cost(client, config)
-    return estimate.model_dump()
+    try:
+        client = AsyncOpenAI(api_key=api_key) if api_key else AsyncOpenAI()
+    except Exception:
+        raise HTTPException(status_code=422, detail="No API key provided. Set OPENAI_API_KEY or pass api_key in config.")
+    try:
+        estimate = await estimate_run_cost(client, config)
+        return estimate.model_dump()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Estimation failed: {str(e)}")

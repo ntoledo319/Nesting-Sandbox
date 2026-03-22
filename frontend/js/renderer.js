@@ -234,7 +234,7 @@ class Renderer {
      */
     renderHistoryItem(run) {
         return `
-            <label class="history-item">
+            <label class="history-item" data-total-cost="${run.total_cost || 0}">
                 <input type="checkbox" value="${escapeHtml(run.run_id)}">
                 <div class="history-item-info">
                     <div class="history-item-question">${escapeHtml(truncate(run.question, 120))}</div>

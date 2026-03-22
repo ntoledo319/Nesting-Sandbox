@@ -33,7 +33,7 @@
 }
 
 .btn-primary:hover {
-    background: #8f87e7;
+    background: var(--specialist-hover);
     box-shadow: 0 0 16px var(--specialist-glow);
 }
 
@@ -96,6 +96,11 @@
 
 .btn-icon:hover {
     background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.btn-icon:active {
+    transform: scale(0.92);
 }
 
 .btn-sm {
@@ -259,11 +264,16 @@
     background: var(--bg-surface);
 }
 
-.drop-zone:hover,
-.drop-zone.drag-over {
+.drop-zone:hover {
     border-color: var(--specialist-border);
     background: var(--specialist-bg);
     box-shadow: inset 0 0 30px var(--specialist-glow);
+}
+
+.drop-zone.drag-over {
+    border-color: var(--specialist-color);
+    background: var(--specialist-bg);
+    box-shadow: 0 0 20px var(--specialist-glow);
 }
 
 .drop-zone-content {
@@ -407,7 +417,7 @@
 }
 
 .specialist-card {
-    padding: 14px 16px;
+    padding: 12px 16px;
     background: var(--specialist-bg);
     border: 1px solid var(--specialist-border);
     border-radius: var(--radius-md);
@@ -772,6 +782,15 @@
     background: var(--specialist-bg);
 }
 
+.preset-btn:active {
+    transform: scale(0.95);
+}
+
+.preset-btn:focus-visible {
+    outline: 2px solid var(--specialist-color);
+    outline-offset: 2px;
+}
+
 .modal-form {
     display: flex;
     flex-direction: column;
@@ -828,7 +847,7 @@
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     animation: slide-in-bottom 300ms var(--ease-out);
-    transition: background var(--duration-fast);
+    transition: background var(--duration-fast) ease;
 }
 
 .feed-item:hover {
@@ -1025,10 +1044,21 @@
     background: none;
     border: none;
     transition: color var(--duration-fast);
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 .feed-expand:hover {
-    color: #8f87e7;
+    color: var(--specialist-hover);
+}
+
+.feed-expand:active {
+    opacity: 0.7;
+}
+
+.feed-expand:focus-visible {
+    outline: 2px solid var(--specialist-color);
+    outline-offset: 2px;
 }
 
 /* --- JS-generated filter button class (Fix #4) --- */
@@ -1084,7 +1114,12 @@
 }
 
 .report-card-header:hover {
-    background: var(--bg-elevated);
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+}
+
+.report-card-header:active {
+    transform: translateY(0);
 }
 
 .report-card-header-left {
@@ -1724,6 +1759,11 @@
     background: var(--box1-color);
 }
 
+.toggle input:focus-visible + .toggle-slider {
+    outline: 2px solid var(--specialist-color);
+    outline-offset: 2px;
+}
+
 .toggle-desc {
     font-size: 0.82rem;
     color: var(--text-secondary);
@@ -1853,7 +1893,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 14px;
+    padding: 12px 16px;
     background: var(--bg-elevated);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-md);
@@ -1920,6 +1960,11 @@
     border-color: var(--border-strong);
 }
 
+.history-item:focus-within {
+    border-color: var(--specialist-border);
+    outline: none;
+}
+
 .history-item.selected {
     border-color: var(--specialist-border);
     background: var(--specialist-bg);
@@ -1983,4 +2028,33 @@
     color: var(--specialist-color);
     background: var(--specialist-bg);
     border: 1px solid var(--specialist-border);
+}
+
+
+/* ================================================
+   INLINE CODE STYLING (Markdown content)
+   ================================================ */
+
+.feed-item-content code,
+.report-card-content code {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--box1-color);
+}
+
+
+/* ================================================
+   SPECIALIST GRID EMPTY STATE
+   ================================================ */
+
+.specialist-grid:empty::after {
+    content: 'No specialists added yet';
+    color: var(--text-tertiary);
+    font-size: 0.82rem;
+    font-style: italic;
+    padding: 8px 0;
 }

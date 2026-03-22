@@ -37,6 +37,7 @@
     --specialist-bg: rgba(127, 119, 221, 0.08);
     --specialist-border: rgba(127, 119, 221, 0.25);
     --specialist-glow: rgba(127, 119, 221, 0.15);
+    --specialist-hover: #8f87e7;
 
     /* User — Gold */
     --user-color: #e8c547;

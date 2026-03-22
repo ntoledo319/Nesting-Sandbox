@@ -672,6 +672,7 @@ class RunManager:
                     max_completion_tokens=4096,
                     status_callback=status_cb,
                     specialist_domain=spawn_domain,
+                    gate_model=settings.gate_model,
                     max_cycles=config.max_cycles,
                     total_boxes=total_boxes,
                     mode=mode,

@@ -216,9 +216,9 @@ function eventTypeLabel(type) {
  * @returns {string}
  */
 function eventTypeColorClass(type) {
-    const positive = ['conclusion', 'evidence', 'discovery', 'partial_solution', 'pattern', 'emergence'];
-    const negative = ['dead_end', 'failure_analysis', 'constraint', 'impossibility_analysis'];
-    const mapping = ['connection', 'unexpected', 'boundary', 'frontier', 'territory_map'];
+    const positive = ['conclusion', 'evidence', 'discovery', 'resolution', 'connection', 'emergence', 'specialist_spawned', 'partial_solution', 'pattern'];
+    const negative = ['dead_end', 'conflict', 'rebuttal', 'failure_analysis', 'constraint', 'impossibility_analysis'];
+    const mapping = ['unexpected', 'boundary', 'frontier', 'territory_map'];
     if (positive.includes(type)) return 'etype-positive';
     if (negative.includes(type)) return 'etype-negative';
     if (mapping.includes(type)) return 'etype-mapping';

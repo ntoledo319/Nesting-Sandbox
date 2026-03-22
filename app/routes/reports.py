@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from app.engine.cost_tracker import CostTracker
 from app.engine.report_generator import generate_full_report, generate_box_report, generate_receipt
 
 router = APIRouter()
@@ -14,6 +15,10 @@ async def get_report(run_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Run not found")
 
     cost_tracker = run_manager.get_cost_tracker(run_id)
+    if cost_tracker is None:
+        # Run was cleaned up — build a stub tracker from the saved total cost
+        cost_tracker = CostTracker(run_state.budget_cap)
+        cost_tracker.total_cost = run_state.total_cost
     event_store = run_manager.get_event_store(run_id)
 
     # Use events from the right source without mutating shared state
@@ -35,6 +40,9 @@ async def download_report(run_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Run not found")
 
     cost_tracker = run_manager.get_cost_tracker(run_id)
+    if cost_tracker is None:
+        cost_tracker = CostTracker(run_state.budget_cap)
+        cost_tracker.total_cost = run_state.total_cost
     event_store = run_manager.get_event_store(run_id)
 
     # Use events from the right source without mutating shared state

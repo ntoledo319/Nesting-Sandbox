@@ -234,6 +234,22 @@ const App = {
                 this.renderSeedRuns();
             }
         });
+
+        // Escape key closes modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.getElementById('specialistModal')?.classList.add('hidden');
+                document.getElementById('historyModal')?.classList.add('hidden');
+            }
+        });
+
+        // Drop zone keyboard accessibility (Enter/Space to open file picker)
+        document.getElementById('dropZone')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                document.getElementById('fileInput')?.click();
+            }
+        });
     },
 
     bindSpecialistRemove() {
@@ -304,7 +320,8 @@ const App = {
             const item = cb.closest('.history-item');
             const question = item?.querySelector('.history-item-question')?.textContent || '';
             const meta = item?.querySelector('.history-item-meta')?.textContent || '';
-            this.seedRuns.push({ run_id: cb.value, question, meta });
+            const total_cost = parseFloat(item?.dataset?.totalCost) || 0;
+            this.seedRuns.push({ run_id: cb.value, question, meta, total_cost });
         });
 
         this.renderSeedRuns();
@@ -325,6 +342,11 @@ const App = {
        -------------------------------------------------------- */
 
     bindWSHandlers() {
+        this.ws.on('connected', () => {
+            const statusEl = document.getElementById('statusText');
+            if (statusEl) statusEl.textContent = 'Connected — waiting for boxes to start...';
+        });
+
         this.ws.on('initial_state', (data) => {
             // Restore mode from server state (handles reconnects)
             if (data.mode) this.mode = data.mode;
@@ -343,6 +365,10 @@ const App = {
         this.ws.on('event', (data) => {
             this.addEvent(data);
             this.viz.flashBox(data.source_box);
+            // Flash all boxes for user input
+            if (data.source_box === 'user') {
+                this.viz.flashAll();
+            }
         });
 
         this.ws.on('box_status', (data) => {
@@ -358,6 +384,11 @@ const App = {
 
         this.ws.on('cost_update', (data) => {
             this.costDisplay.update(data);
+            // Update aria
+            const progressBar = document.querySelector('.cost-progress');
+            if (progressBar) {
+                progressBar.setAttribute('aria-valuenow', Math.round(data.budget_pct || 0));
+            }
         });
 
         this.ws.on('box_spawned', (data) => {
@@ -484,6 +515,9 @@ const App = {
         const question = document.getElementById('questionInput').value.trim();
         if (!question) return;
 
+        const launchBtn = document.getElementById('launchBtn');
+        if (launchBtn) launchBtn.disabled = true;
+
         const apiKey = document.getElementById('apiKeyInput').value.trim();
         const budget = parseFloat(document.getElementById('budgetSlider').value);
 
@@ -514,6 +548,7 @@ const App = {
                     detail = err.detail || detail;
                 } catch {}
                 alert(detail);
+                if (launchBtn) launchBtn.disabled = false;
                 return;
             }
 
@@ -539,6 +574,7 @@ const App = {
         } catch (e) {
             console.error('Start run error:', e);
             alert('Failed to start run: ' + e.message);
+            if (launchBtn) launchBtn.disabled = false;
         }
     },
 

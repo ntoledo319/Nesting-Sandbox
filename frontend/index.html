@@ -25,11 +25,11 @@
             <div class="header-right">
                 <div class="api-key-container">
                     <input type="password" id="apiKeyInput" placeholder="OpenAI API Key (optional)" class="input-subtle">
-                    <button id="apiKeyToggle" class="btn-icon" title="Toggle visibility">&#x1F441;</button>
+                    <button id="apiKeyToggle" class="btn-icon" title="Toggle visibility" aria-label="Toggle API key visibility">&#x1F441;</button>
                 </div>
                 <span id="headerModeBadge" class="header-mode-badge hidden"></span>
                 <span id="headerCost" class="header-cost hidden"></span>
-                <button id="headerStop" class="btn-danger hidden">&#x25A0; Stop</button>
+                <button id="headerStop" class="btn-danger hidden" aria-label="Stop run">&#x25A0; Stop</button>
             </div>
         </header>
 
@@ -38,7 +38,7 @@
             <div class="setup-container">
                 <!-- Question -->
                 <div class="setup-section fade-in" style="--delay: 0">
-                    <label class="section-label">What's the question?</label>
+                    <label class="section-label" for="questionInput">What's the question?</label>
                     <textarea id="questionInput" class="textarea-main" placeholder="Ask something conventionally impossible..." rows="4"></textarea>
                 </div>
 
@@ -69,7 +69,7 @@
                     <div class="toggle-row">
                         <label class="section-label">WEB SEARCH</label>
                         <label class="toggle">
-                            <input type="checkbox" id="webSearchToggle" checked>
+                            <input type="checkbox" id="webSearchToggle" checked aria-label="Enable web search">
                             <span class="toggle-slider"></span>
                         </label>
                         <span class="toggle-desc">Let Box 1 search the web during reasoning</span>
@@ -81,7 +81,7 @@
                     <div class="toggle-row">
                         <label class="section-label">CONFLICT DETECTION</label>
                         <label class="toggle">
-                            <input type="checkbox" id="conflictToggle" checked>
+                            <input type="checkbox" id="conflictToggle" checked aria-label="Enable conflict detection">
                             <span class="toggle-slider"></span>
                         </label>
                         <span class="toggle-desc">Auto-detect and debate contradictions between boxes</span>
@@ -89,7 +89,7 @@
                     <div class="toggle-row" style="margin-top: 12px;">
                         <label class="section-label">DYNAMIC SPAWNING</label>
                         <label class="toggle">
-                            <input type="checkbox" id="spawningToggle" checked>
+                            <input type="checkbox" id="spawningToggle" checked aria-label="Enable dynamic spawning">
                             <span class="toggle-slider"></span>
                         </label>
                         <span class="toggle-desc">Let Box 2 create new specialists mid-run</span>
@@ -99,7 +99,7 @@
                 <!-- Documents -->
                 <div class="setup-section fade-in" style="--delay: 2">
                     <label class="section-label">Supporting Documents</label>
-                    <div id="dropZone" class="drop-zone">
+                    <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Upload documents">
                         <div class="drop-zone-content">
                             <span class="drop-icon">&#x1F4CE;</span>
                             <span>Drop documents here or click to upload</span>
@@ -128,7 +128,7 @@
                 </div>
 
                 <!-- Specialist Modal -->
-                <div id="specialistModal" class="modal hidden">
+                <div id="specialistModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Add specialist">
                     <div class="modal-content">
                         <h3 class="modal-title">Add Specialist</h3>
                         <div class="modal-presets">
@@ -151,7 +151,7 @@
                 </div>
 
                 <!-- History Modal -->
-                <div id="historyModal" class="modal hidden">
+                <div id="historyModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Run history">
                     <div class="modal-content modal-lg">
                         <h3 class="modal-title">Run History</h3>
                         <div id="historyList" class="history-list"></div>
@@ -164,10 +164,10 @@
 
                 <!-- Budget -->
                 <div class="setup-section fade-in" style="--delay: 5">
-                    <label class="section-label">BUDGET</label>
+                    <label class="section-label" for="budgetSlider">BUDGET</label>
                     <div class="budget-slider-container">
                         <span class="budget-label">$1</span>
-                        <input type="range" id="budgetSlider" min="1" max="50" value="10" step="0.5" class="budget-slider">
+                        <input type="range" id="budgetSlider" min="1" max="50" value="10" step="0.5" class="budget-slider" aria-label="Budget cap in dollars">
                         <span class="budget-label">$50</span>
                         <span id="budgetValue" class="budget-value">$10.00</span>
                     </div>
@@ -230,7 +230,7 @@
                             </div>
                             <span id="costPct" class="cost-pct">0%</span>
                         </div>
-                        <div class="cost-progress">
+                        <div class="cost-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Budget usage">
                             <div id="costBar" class="cost-bar" style="width: 0%"></div>
                         </div>
                         <div class="cost-details">
@@ -256,9 +256,9 @@
                         <h2 class="panel-title">LIVE FEED</h2>
                         <div id="feedFilters" class="feed-filters"></div>
                     </div>
-                    <div id="liveFeed" class="live-feed"></div>
+                    <div id="liveFeed" class="live-feed" aria-live="polite" aria-relevant="additions"></div>
                     <div class="feed-input-bar" id="feedInputBar">
-                        <input type="text" id="feedInput" class="feed-input" placeholder="Inject context or redirect the reasoning..." autocomplete="off">
+                        <input type="text" id="feedInput" class="feed-input" placeholder="Inject context or redirect the reasoning..." autocomplete="off" aria-label="Inject message into reasoning">
                         <button id="feedSendBtn" class="btn-primary btn-sm feed-send-btn">Inject</button>
                     </div>
                 </div>
