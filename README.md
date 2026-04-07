@@ -70,3 +70,36 @@ uvicorn app.main:app --reload
 ```
 
 You can also provide an API key per-run in the UI header.
+
+## Android App
+
+An Android wrapper app is included under `android-app/`. It loads the Nesting Sandbox web UI in a `WebView`.
+
+### Build and run
+
+```bash
+cd android-app
+./gradlew assembleDebug
+```
+
+Then install `app/build/outputs/apk/debug/app-debug.apk` on a device/emulator.
+
+By default, the app points to `http://10.0.2.2:8000` (Android emulator loopback to your host machine).
+
+To change the endpoint, edit this line in `android-app/app/build.gradle.kts`:
+
+```kotlin
+buildConfigField("String", "NESTING_SANDBOX_BASE_URL", "\"http://10.0.2.2:8000\"")
+```
+
+### Create and push a dedicated Git repo for the Android app
+
+Use the helper script to create a clean standalone repo from `android-app/`:
+
+```bash
+# Create local standalone repo at ../Nesting-Sandbox-Android
+./android-app/create-standalone-repo.sh
+
+# Or create + push directly
+./android-app/create-standalone-repo.sh ../Nesting-Sandbox-Android git@github.com:<you>/nesting-sandbox-android.git
+```
