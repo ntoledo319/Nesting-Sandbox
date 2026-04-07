@@ -140,8 +140,8 @@ function getBoxDisplayName(boxId) {
  * @returns {string}
  */
 function getBoxShortName(boxId) {
-    if (boxId === 'box1') return 'box1';
-    if (boxId === 'box2') return 'box2';
+    if (boxId === 'box1') return 'base';
+    if (boxId === 'box2') return 'layer2';
     if (boxId === 'user') return 'you';
     if (boxId === 'system:conflict_detector') return 'conflict';
     if (boxId === 'system:debate') return 'debate';
@@ -238,9 +238,9 @@ function eventTypeColorClass(type) {
  */
 function getBoxDisplayNameForMode(boxId, mode) {
     const names = {
-        solve:    { box1: 'Box 1 \u2014 Solver',      box2: 'Box 2 \u2014 Extrapolator' },
-        explore:  { box1: 'Box 1 \u2014 Explorer',     box2: 'Box 2 \u2014 Cartographer' },
-        freeform: { box1: 'Box 1 \u2014 Analyst',      box2: 'Box 2 \u2014 Meta-Analyst' },
+        solve:    { box1: 'Base Box \u2014 Solver',      box2: 'Amplifier \u2014 Extrapolator' },
+        explore:  { box1: 'Base Box \u2014 Explorer',    box2: 'Amplifier \u2014 Cartographer' },
+        freeform: { box1: 'Base Box \u2014 Analyst',     box2: 'Amplifier \u2014 Meta-Analyst' },
     };
     if (boxId === 'box1' || boxId === 'box2') {
         return (names[mode] || names.solve)[boxId];
@@ -260,9 +260,9 @@ function getBoxDisplayNameForMode(boxId, mode) {
  */
 function getBoxVizLabels(boxId, mode) {
     const labels = {
-        solve:    { box1: { label: 'Box 1', sub: 'Solver' },      box2: { label: 'Box 2', sub: 'Extrapolator' } },
-        explore:  { box1: { label: 'Box 1', sub: 'Explorer' },     box2: { label: 'Box 2', sub: 'Cartographer' } },
-        freeform: { box1: { label: 'Box 1', sub: 'Analyst' },      box2: { label: 'Box 2', sub: 'Meta-Analyst' } },
+        solve:    { box1: { label: 'Base Box', sub: 'Solver' },     box2: { label: 'Layer 2', sub: 'Extrapolator' } },
+        explore:  { box1: { label: 'Base Box', sub: 'Explorer' },   box2: { label: 'Layer 2', sub: 'Cartographer' } },
+        freeform: { box1: { label: 'Base Box', sub: 'Analyst' },    box2: { label: 'Layer 2', sub: 'Meta-Analyst' } },
     };
     return (labels[mode] || labels.solve)[boxId] || { label: boxId, sub: '' };
 }

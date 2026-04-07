@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Optional
 from app.models import RunState, Event
 from app.engine.cost_tracker import CostTracker
+from app.engine.report_generator import generate_run_summary, get_box_display_name
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,8 @@ class RunHistory:
         """Save a completed run summary to disk."""
         try:
             key_findings = self._extract_key_findings(events)
+            summary = generate_run_summary(run_state, events)
+            mode = run_state.config.mode or "solve"
 
             # Build box report summaries
             box_reports = []
@@ -33,17 +36,9 @@ class RunHistory:
                 for e in box_events:
                     report_lines.append(f"[{e.event_type.upper()}] {e.content}")
 
-                display_name = box_id
-                if box_id == "box1":
-                    display_name = "Box 1 — Primary Solver"
-                elif box_id == "box2":
-                    display_name = "Box 2 — Extrapolator"
-                elif box_id.startswith("specialist:"):
-                    display_name = box_id.replace("specialist:", "")
-
                 box_reports.append({
                     "box_id": box_id,
-                    "display_name": display_name,
+                    "display_name": get_box_display_name(box_id, mode),
                     "report_markdown": "\n\n".join(report_lines) if report_lines else "No findings.",
                 })
 
@@ -54,7 +49,15 @@ class RunHistory:
                 "completed_at": datetime.now(timezone.utc).isoformat() + "Z",
                 "total_cost": round(cost_tracker.total_cost, 4) if cost_tracker else 0,
                 "specialists": [s.name for s in run_state.config.specialists],
-                "summary": {"box_reports": box_reports},
+                "summary": {
+                    "primary_outcome": summary["primary_outcome"],
+                    "base_box_status": summary["base_box_status"],
+                    "stack_profile": summary["stack_profile"],
+                    "base_box_takeaways": summary["base_box_takeaways"],
+                    "amplifier_takeaways": summary["amplifier_takeaways"],
+                    "source_footprint": summary["source_footprint"],
+                    "box_reports": box_reports,
+                },
                 "key_findings": key_findings,
             }
 
@@ -80,12 +83,14 @@ class RunHistory:
         # Filter to substantive events only
         substantive = [e for e in events if e.event_type in priority_order]
 
-        # Sort by priority
+        # Sort by priority and favor Box 1 when event types tie.
         def sort_key(event):
             try:
-                return priority_order.index(event.event_type)
+                priority = priority_order.index(event.event_type)
             except ValueError:
-                return len(priority_order)
+                priority = len(priority_order)
+            base_penalty = 0 if event.source_box == "box1" else 1
+            return (priority, base_penalty)
 
         substantive.sort(key=sort_key)
 
@@ -112,6 +117,8 @@ class RunHistory:
                     "completed_at": data.get("completed_at", ""),
                     "total_cost": data.get("total_cost", 0),
                     "specialists": data.get("specialists", []),
+                    "primary_outcome": data.get("summary", {}).get("primary_outcome", ""),
+                    "stack_profile": data.get("summary", {}).get("stack_profile", {}),
                 })
             except Exception:
                 logger.warning("Failed to read run history: %s", filepath)
@@ -150,6 +157,7 @@ class RunHistory:
 
             lines = [
                 f"Run: {run_data['question'][:300]}",
+                f"Primary outcome: {run_data.get('summary', {}).get('primary_outcome', 'No primary outcome recorded.')[:300]}",
                 f"Key findings:",
             ]
             for i, finding in enumerate(run_data.get("key_findings", []), 1):

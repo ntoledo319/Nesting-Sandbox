@@ -27,7 +27,7 @@ app = FastAPI(title="The Nesting Sandbox", version="1.0.0", lifespan=lifespan)
 # per the CORS spec (browsers will reject the response).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],

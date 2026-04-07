@@ -92,13 +92,14 @@ class BoxVisualization {
     render() {
         const hasSpecs = this.specialists.length > 0;
         const box1 = this.boxes['box1'] || { status: 'waiting', cycle: 0 };
+        const hasBox2 = Boolean(this.boxes['box2']);
         const box2 = this.boxes['box2'] || { status: 'waiting', cycle: 0 };
         const mode = (typeof App !== 'undefined' && App.mode) ? App.mode : 'solve';
         const b1 = getBoxVizLabels('box1', mode);
         const b2 = getBoxVizLabels('box2', mode);
 
         const innerHtml = `
-            <div class="viz-inner ${this._boxAnim(box1.status, 'box1')}" data-box="box1">
+            <div class="viz-inner ${this._boxAnim(box1.status, 'box1')}${hasBox2 ? '' : ' viz-standalone'}" data-box="box1">
                 <div class="viz-inner-icon">\u25c8</div>
                 <div class="viz-inner-label">${b1.label} \u00b7 ${b1.sub}</div>
                 <div class="viz-inner-meta">cycle ${box1.cycle}</div>
@@ -107,7 +108,7 @@ class BoxVisualization {
 
         let specsHtml = '';
 
-        if (hasSpecs) {
+        if (hasSpecs && hasBox2) {
             const specPills = this.specialists.map(s => {
                 const statusClass = s.status === 'thinking' ? 'spec-thinking' :
                                     s.status === 'done' ? 'spec-done' : '';
@@ -129,11 +130,35 @@ class BoxVisualization {
                     <div class="spec-pills-row">${specPills}</div>
                 </div>
             `;
-        } else {
+        } else if (hasSpecs) {
+            const specPills = this.specialists.map(s => {
+                const statusClass = s.status === 'thinking' ? 'spec-thinking' :
+                                    s.status === 'done' ? 'spec-done' : '';
+                return `<span class="spec-pill ${statusClass}" data-box="${s.id}" title="${s.name}: ${s.status} (cycle ${s.cycle})">
+                    <span class="spec-dot"></span>
+                    ${s.name}
+                    ${s.status === 'done' ? ' \u2713' : ''}
+                </span>`;
+            }).join('');
+
+            specsHtml = `
+                <div class="viz-outer base-only ${this._statusAnim('specialist')}" data-box="specialists">
+                    <div class="viz-outer-label">Specialists</div>
+                    ${innerHtml}
+                    <div class="spec-pills-row">${specPills}</div>
+                </div>
+            `;
+        } else if (hasBox2) {
             specsHtml = `
                 <div class="viz-middle no-outer ${this._boxAnim(box2.status, 'box2')}" data-box="box2">
                     <div class="viz-middle-label">${b2.label} \u00b7 ${b2.sub}</div>
                     <div class="viz-middle-meta">cycle ${box2.cycle} \u00b7 ${box2.status}</div>
+                    ${innerHtml}
+                </div>
+            `;
+        } else {
+            specsHtml = `
+                <div class="viz-base-only">
                     ${innerHtml}
                 </div>
             `;

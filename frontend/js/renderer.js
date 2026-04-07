@@ -236,6 +236,10 @@ class Renderer {
     renderHistoryItem(run) {
         const modeLabels = { solve: 'Solve', explore: 'Explore', freeform: 'Freeform' };
         const mode = run.mode || 'solve';
+        const stackLabel = run.stack_profile?.label ? ` · ${escapeHtml(run.stack_profile.label)}` : '';
+        const outcome = run.primary_outcome
+            ? `<div class="history-item-outcome">${escapeHtml(truncate(run.primary_outcome, 140))}</div>`
+            : '';
         return `
             <label class="history-item" data-total-cost="${run.total_cost || 0}">
                 <input type="checkbox" value="${escapeHtml(run.run_id)}">
@@ -244,8 +248,9 @@ class Renderer {
                     <div class="history-item-meta">
                         <span class="results-mode-badge mode-badge-${mode}" style="font-size:0.6rem;padding:1px 6px;">${modeLabels[mode] || mode}</span>
                         ${formatCost(run.total_cost)} · ${run.completed_at ? new Date(run.completed_at).toLocaleDateString() : ''}
-                        ${run.specialists && run.specialists.length ? ' · ' + run.specialists.length + ' specialists' : ''}
+                        ${run.specialists && run.specialists.length ? ' · ' + run.specialists.length + ' specialists' : ''}${stackLabel}
                     </div>
+                    ${outcome}
                 </div>
             </label>
         `;
@@ -271,6 +276,96 @@ class Renderer {
     /* --------------------------------------------------------
        RESULTS STATE
        -------------------------------------------------------- */
+
+    renderRunSummaryCard(summary) {
+        const card = document.createElement('div');
+        const stackLabel = summary?.stack_profile?.label || 'Base box only';
+        const componentBadges = (summary?.stack_profile?.components || [])
+            .map(component => `<span class="summary-pill">${escapeHtml(component)}</span>`)
+            .join('');
+
+        const baseTakeaways = (summary?.base_box_takeaways || []).length
+            ? `
+                <ul class="summary-list">
+                    ${summary.base_box_takeaways.map(item => `
+                        <li>
+                            <span class="summary-list-label">${escapeHtml(item.label)}</span>
+                            <span>${escapeHtml(truncate(item.content, 220))}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `
+            : '<p class="summary-empty">No base-box takeaways were recorded.</p>';
+
+        const amplifierTakeaways = (summary?.amplifier_takeaways || []).length
+            ? `
+                <ul class="summary-list">
+                    ${summary.amplifier_takeaways.map(item => `
+                        <li>
+                            <span class="summary-list-label">${escapeHtml(item.source_label)} · ${escapeHtml(item.label)}</span>
+                            <span>${escapeHtml(truncate(item.content, 220))}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `
+            : '<p class="summary-empty">No optional layers were active beyond the base box.</p>';
+
+        const footprint = summary?.source_footprint || {};
+        const metrics = [
+            ['Docs', footprint.documents || 0],
+            ['Web', footprint.web_search_events || 0],
+            ['Inputs', footprint.user_inputs || 0],
+            ['Seeds', footprint.seed_runs || 0],
+            ['Conflicts', footprint.conflicts || 0],
+        ];
+
+        card.className = 'report-card report-card-summary expanded';
+        card.innerHTML = `
+            <div class="report-card-header color-box1-border">
+                <div class="report-card-title">
+                    <span class="report-dot color-box1"></span>
+                    <h3>Base Box Outcome</h3>
+                </div>
+                <div class="report-card-stats">
+                    <span class="mono">${escapeHtml(stackLabel)}</span>
+                </div>
+            </div>
+            <div class="report-card-body">
+                <div class="run-summary-grid">
+                    <section class="summary-block">
+                        <p class="summary-eyebrow">Primary Outcome</p>
+                        <p class="summary-primary">${escapeHtml(summary?.primary_outcome || 'No primary outcome recorded.')}</p>
+                        <p class="summary-support">${escapeHtml(summary?.base_box_status || '')}</p>
+                    </section>
+                    <section class="summary-block">
+                        <p class="summary-eyebrow">Layering</p>
+                        <div class="summary-pill-row">${componentBadges}</div>
+                        <p class="summary-support">${escapeHtml(summary?.amplification_note || '')}</p>
+                    </section>
+                </div>
+                <div class="summary-columns">
+                    <section class="summary-column">
+                        <h4>Base Box Takeaways</h4>
+                        ${baseTakeaways}
+                    </section>
+                    <section class="summary-column">
+                        <h4>Amplifier Takeaways</h4>
+                        ${amplifierTakeaways}
+                    </section>
+                </div>
+                <div class="summary-metrics">
+                    ${metrics.map(([label, value]) => `
+                        <div class="summary-metric">
+                            <span class="summary-metric-label">${escapeHtml(label)}</span>
+                            <strong class="summary-metric-value">${escapeHtml(String(value))}</strong>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        return card;
+    }
 
     /**
      * Create an expandable report card for a single box's results.
@@ -342,15 +437,16 @@ class Renderer {
             const modeLabels = { solve: 'Solve', explore: 'Explore', freeform: 'Freeform' };
             statsEl.innerHTML = `
                 <span class="results-mode-badge mode-badge-${mode}">${modeLabels[mode] || mode}</span>
-                <span>\u00b7</span>
+                <span>${escapeHtml(report.summary?.stack_profile?.label || r.stack_profile?.label || 'Base box only')}</span>
                 <span>${formatCost(r.total_cost)}</span>
-                <span>\u00b7</span>
                 <span>${r.cycles_completed} cycles</span>
-                <span>\u00b7</span>
                 <span>${formatNumber((r.total_tokens?.input || 0) + (r.total_tokens?.output || 0))} tokens</span>
-                <span>\u00b7</span>
                 <span>${r.cache_hit_rate || 0}% cache</span>
             `;
+        }
+
+        if (report.summary) {
+            container.appendChild(this.renderRunSummaryCard(report.summary));
         }
 
         // Box reports

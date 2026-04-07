@@ -1,8 +1,9 @@
-"""Run manager — orchestrates a full multi-box reasoning run.
+"""Run manager — orchestrates a base-box-first reasoning run.
 
-Creates Box 1 (o4-mini), Box 2 (gpt-4.1), and any requested specialist
-boxes (gpt-4.1-mini), launches them as concurrent async tasks, monitors
-completion, and manages the budget lifecycle.
+Creates Box 1 (o4-mini) as the required base case, optionally adds
+Box 2 (gpt-4.1) as an amplification layer, and then any requested
+specialist boxes (gpt-4.1-mini). Launches them as concurrent async tasks,
+monitors completion, and manages the budget lifecycle.
 """
 
 import asyncio
@@ -67,6 +68,7 @@ Label your findings with ANY of these tags as appropriate:
 
 _BOX1_USER_INPUT_BLOCK = """\
 
+You are the REQUIRED base box. Your output must stand on its own even if no other boxes exist for this run.
 You may receive [USER_INPUT] events from the human operator. Treat them as high-priority context — the human knows things you don't.
 You have access to web search. Use it when you need current data, want to verify claims, or hit a knowledge gap. Search strategically — don't search for things you already know.
 """
@@ -131,6 +133,7 @@ Think step by step. Show your reasoning. Be thorough, creative, and persistent.
 
 _BOX2_USER_INPUT_BLOCK = """\
 
+Box 1 is the required base case for the run. You are an OPTIONAL amplification layer: extend it, pressure-test it, and surface second-order implications, but never replace its job.
 You may receive [USER_INPUT] events from the human operator. Treat them as high-priority context.
 If you identify a domain that is not covered by the current specialists and would benefit from dedicated analysis, you can request a new specialist by outputting: [SPAWN_SPECIALIST] Name: <name> | Domain: <description of what this specialist should focus on>. Be judicious — only spawn when a domain is clearly underserved and would meaningfully contribute.
 """
@@ -207,8 +210,9 @@ SPECIALIST_PROMPTS = {
 You are a specialist analyst focused on: {specialist_name}
 Domain description: {specialist_description}
 
-You have access to ALL findings from the primary solver, the extrapolation \
-engine, and all other specialists. Analyze everything through the lens of your specialty.
+Box 1 is the required base case for the run. You have access to all visible \
+findings from the base box, any amplification layer, and all other specialists. \
+Analyze everything through the lens of your specialty.
 
 Pull ONLY information pertinent to your domain. When you find something relevant:
 1. Explain its significance within your domain
@@ -224,8 +228,8 @@ Pull ONLY information pertinent to your domain. When you find something relevant
 You are a specialist analyst focused on: {specialist_name}
 Domain description: {specialist_description}
 
-You have access to ALL findings from the primary explorer, the cartographer, \
-and all other specialists. The system is exploring a problem that may be impossible. \
+Box 1 is the required base case for the run. You have access to all visible \
+findings from the base explorer, any mapping/amplification layer, and all other specialists. The system is exploring a problem that may be impossible. \
 Your job is to analyze everything through the lens of your specialty.
 
 Focus on what the exploration REVEALS within your domain, not on solving the problem. \
@@ -243,8 +247,8 @@ When you find something relevant:
 You are a specialist analyst focused on: {specialist_name}
 Domain description: {specialist_description}
 
-You have access to ALL findings from all other agents. Analyze everything \
-through the lens of your specialty. Adapt to whatever mode the system is \
+Box 1 is the required base case for the run. You have access to all visible \
+findings from the other active layers. Analyze everything through the lens of your specialty. Adapt to whatever mode the system is \
 operating in — solving, exploring, or both.
 
 Pull ONLY information pertinent to your domain. Build toward domain-specific insights.
@@ -414,12 +418,18 @@ class RunManager:
                     pass
 
         # -- Total box count for done-detection (FIX 3) -----------------
-        total_boxes = 2 + len(config.specialists)
+        enable_box2 = config.enable_box2
+        total_boxes = 1 + len(config.specialists) + (1 if enable_box2 else 0)
 
         # -- Resolve mode-aware prompts --------------------------------
         mode = config.mode or "solve"
         box1_system = BOX1_PROMPTS.get(mode, BOX1_PROMPTS["solve"])
         box2_system = BOX2_PROMPTS.get(mode, BOX2_PROMPTS["solve"])
+
+        if not config.web_search_enabled:
+            box1_system += "\n\nWeb search is disabled for this run. Work only from the provided context, prior seeded context, and your own reasoning."
+        if not config.allow_spawning:
+            box2_system += "\n\nDynamic specialist spawning is disabled for this run. Do not request new specialists."
 
         # -- Create Box 1 (primary solver) -----------------------------
         box1 = BoxRunner(
@@ -439,22 +449,24 @@ class RunManager:
         )
         run_state.boxes["box1"] = box1.state
 
-        # -- Create Box 2 (extrapolation engine) -----------------------
-        box2 = BoxRunner(
-            box_id="box2",
-            model=settings.box2_model,
-            system_prompt=box2_system,
-            event_store=event_store,
-            cost_tracker=cost_tracker,
-            client=client,
-            visibility_filter=_box2_filter,
-            max_completion_tokens=8192,
-            status_callback=status_callback,
-            max_cycles=config.max_cycles,
-            total_boxes=total_boxes,
-            mode=mode,
-        )
-        run_state.boxes["box2"] = box2.state
+        # -- Create Box 2 (optional amplification layer) ---------------
+        box2: BoxRunner | None = None
+        if enable_box2:
+            box2 = BoxRunner(
+                box_id="box2",
+                model=settings.box2_model,
+                system_prompt=box2_system,
+                event_store=event_store,
+                cost_tracker=cost_tracker,
+                client=client,
+                visibility_filter=_box2_filter,
+                max_completion_tokens=8192,
+                status_callback=status_callback,
+                max_cycles=config.max_cycles,
+                total_boxes=total_boxes,
+                mode=mode,
+            )
+            run_state.boxes["box2"] = box2.state
 
         # -- Create specialist boxes -----------------------------------
         specialists: list[BoxRunner] = []
@@ -484,7 +496,7 @@ class RunManager:
             run_state.boxes[spec_id] = spec.state
             specialists.append(spec)
 
-        all_boxes = [box1, box2, *specialists]
+        all_boxes = [box1, *([box2] if box2 else []), *specialists]
         self._boxes[run_id] = all_boxes
 
         # -- Launch all boxes concurrently -----------------------------
@@ -493,15 +505,16 @@ class RunManager:
         task1 = asyncio.create_task(box1.run(initial_context), name=f"{run_id}:box1")
         self._tasks[run_id].append(task1)
 
-        task2 = asyncio.create_task(box2.run(), name=f"{run_id}:box2")
-        self._tasks[run_id].append(task2)
+        if box2:
+            task2 = asyncio.create_task(box2.run(), name=f"{run_id}:box2")
+            self._tasks[run_id].append(task2)
 
         for spec in specialists:
             task = asyncio.create_task(spec.run(), name=f"{run_id}:{spec.box_id}")
             self._tasks[run_id].append(task)
 
         # -- Conflict detector -----------------------------------------
-        if config.conflict_detection:
+        if config.conflict_detection and total_boxes > 1:
             detector = ConflictDetector(
                 event_store=event_store,
                 cost_tracker=cost_tracker,
@@ -515,7 +528,7 @@ class RunManager:
             self._detectors[run_id] = detector
 
         # -- Spawn monitor ---------------------------------------------
-        if config.allow_spawning:
+        if config.allow_spawning and enable_box2:
             spawn_task = asyncio.create_task(
                 self._spawn_monitor(run_id), name=f"{run_id}:spawn_monitor"
             )
@@ -543,10 +556,11 @@ class RunManager:
         self._monitor_tasks[run_id] = monitor_task
 
         logger.info(
-            "Run %s started: %d boxes (%d specialists)",
+            "Run %s started: %d boxes (%d specialists, box2=%s)",
             run_id,
             len(all_boxes),
             len(specialists),
+            enable_box2,
         )
         return run_state
 

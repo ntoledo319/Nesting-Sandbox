@@ -2,6 +2,8 @@
 
 A concentric multi-agent reasoning engine that solves problems through layered observation and asymmetric information flow. Built on OpenAI's API.
 
+Box 1 is the required base case for every run. Box 2 and any specialists are optional amplification layers that extend, pressure-test, or specialize the base-box result.
+
 ## How It Works
 
 The system is organized as nested "boxes" — concentric layers of AI agents where inner boxes are focused and blind to outer boxes, while outer boxes are omniscient observers that selectively pull what's relevant.
@@ -11,10 +13,10 @@ The system is organized as nested "boxes" — concentric layers of AI agents whe
 │  Boxes 3+  (Specialists)          │
 │  Full read access, selective pull  │
 │   ┌───────────────────────────┐   │
-│   │  Box 2  (Extrapolator)    │   │
+│   │  Box 2  (Optional Layer)  │   │
 │   │  Watches Box 1, extends   │   │
 │   │   ┌───────────────────┐   │   │
-│   │   │  Box 1  (Solver)  │   │   │
+│   │   │  Box 1  (Base)    │   │   │
 │   │   │  Core problem     │   │   │
 │   │   └───────────────────┘   │   │
 │   └───────────────────────────┘   │
@@ -42,8 +44,8 @@ The system decides its own approach. Boxes adapt in real-time — if the problem
 
 | Role | Model | $/1M in | $/1M out | Why |
 |------|-------|---------|----------|-----|
-| Box 1 | o4-mini | $1.10 | $4.40 | Built-in chain-of-thought reasoning |
-| Box 2 | gpt-4.1 | $2.00 | $8.00 | 1M token context, best instruction-following |
+| Box 1 | o4-mini | $1.10 | $4.40 | Required base-case reasoning layer |
+| Box 2 | gpt-4.1 | $2.00 | $8.00 | Optional amplification and extrapolation layer |
 | Specialists | gpt-4.1-mini | $0.40 | $1.60 | 1M context at 5x cheaper |
 | Relevance Gate | gpt-4.1-nano | $0.10 | $0.40 | Binary yes/no pre-filter |
 

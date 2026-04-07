@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -12,6 +13,7 @@ class Settings(BaseSettings):
     max_concurrent_runs: int = 3
     default_budget_cap: float = 10.0
     max_budget_cap: float = 100.0
+    cors_origins: list[str] = ["http://localhost:8000", "http://127.0.0.1:8000"]
 
     # Model configuration
     box1_model: str = "o4-mini"
@@ -21,6 +23,13 @@ class Settings(BaseSettings):
 
     # Box1 reasoning token cap per cycle
     box1_max_completion_tokens: int = 16384
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value):
+        if isinstance(value, str):
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
 
 
 settings = Settings()

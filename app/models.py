@@ -19,6 +19,7 @@ class RunConfig(BaseModel):
     question: str = Field(min_length=1, max_length=100000)
     documents: list[str] = Field(default_factory=list)  # Document text content
     specialists: list[SpecialistConfig] = Field(default_factory=list)
+    enable_box2: bool = Field(default=False)  # Optional amplification layer
     budget_cap: float = Field(default=10.0, gt=0)  # USD
     max_cycles: int = Field(default=50, ge=1, le=200)  # Safety limit even with budget
     api_key: Optional[str] = None  # Optional per-run API key

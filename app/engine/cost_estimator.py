@@ -128,12 +128,12 @@ async def estimate_run_cost(
     )
 
     num_specialists = len(config.specialists)
-    total_per_cycle = (
-        box1_per_cycle
-        + box2_per_cycle
-        + (specialist_per_cycle * num_specialists)
-        + (gate_per_cycle * num_specialists)
-    )
+    total_per_cycle = box1_per_cycle
+    if config.enable_box2:
+        total_per_cycle += box2_per_cycle
+
+    total_per_cycle += (specialist_per_cycle * num_specialists)
+    total_per_cycle += (gate_per_cycle * num_specialists)
 
     # --- Warnings ---
     warnings: list[str] = []

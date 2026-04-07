@@ -3,225 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1320">
     <title>The Nesting Sandbox</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/reset.css">
     <link rel="stylesheet" href="/css/variables.css">
     <link rel="stylesheet" href="/css/layout.css">
     <link rel="stylesheet" href="/css/components.css">
     <link rel="stylesheet" href="/css/visualization.css">
     <link rel="stylesheet" href="/css/animations.css">
+    <link rel="stylesheet" href="/css/portal.css">
 </head>
 <body>
     <div id="app">
-        <!-- Header -->
         <header class="app-header">
             <div class="header-left">
-                <span class="logo">&loz;</span>
-                <h1 class="app-title">NESTING SANDBOX</h1>
+                <span class="logo" aria-hidden="true">&loz;</span>
+                <div class="brand-copy">
+                    <span class="brand-kicker">Mobile Command Portal</span>
+                    <h1 class="app-title">Nesting Sandbox</h1>
+                </div>
             </div>
             <div class="header-right">
-                <div class="api-key-container">
-                    <input type="password" id="apiKeyInput" placeholder="OpenAI API Key (optional)" class="input-subtle">
-                    <button id="apiKeyToggle" class="btn-icon" title="Toggle visibility" aria-label="Toggle API key visibility">&#x1F441;</button>
-                </div>
                 <span id="headerModeBadge" class="header-mode-badge hidden"></span>
                 <span id="headerCost" class="header-cost hidden"></span>
-                <button id="headerStop" class="btn-danger hidden" aria-label="Stop run">&#x25A0; Stop</button>
+                <button id="headerStop" class="btn-danger hidden" aria-label="Stop run">Stop Run</button>
             </div>
         </header>
 
-        <!-- Setup State -->
         <main id="setupView" class="view view-setup">
-            <div class="setup-container">
-                <!-- Question -->
-                <div class="setup-section fade-in" style="--delay: 0">
-                    <label class="section-label" for="questionInput">What's the question?</label>
-                    <textarea id="questionInput" class="textarea-main" placeholder="Ask something conventionally impossible..." rows="4"></textarea>
-                </div>
-
-                <!-- Mode Selector -->
-                <div class="setup-section fade-in" style="--delay: 0.5">
-                    <label class="section-label">MODE</label>
-                    <div class="mode-selector" id="modeSelector">
-                        <button class="mode-btn active" data-mode="solve">
-                            <span class="mode-icon">&#x2692;</span>
-                            <span class="mode-label">Solve</span>
-                            <span class="mode-desc">Find the answer</span>
-                        </button>
-                        <button class="mode-btn" data-mode="explore">
-                            <span class="mode-icon">&#x2690;</span>
-                            <span class="mode-label">Explore</span>
-                            <span class="mode-desc">Learn from trying</span>
-                        </button>
-                        <button class="mode-btn" data-mode="freeform">
-                            <span class="mode-icon">&#x29BF;</span>
-                            <span class="mode-label">Freeform</span>
-                            <span class="mode-desc">See what happens</span>
-                        </button>
+            <div class="setup-container portal-shell">
+                <section class="portal-hero fade-in" style="--delay: 0">
+                    <div class="portal-hero-copy">
+                        <p class="portal-eyebrow">Browser-first mobile workflow</p>
+                        <h2 class="portal-title">Launch layered reasoning from a phone-sized screen without losing control.</h2>
+                        <p class="portal-subtitle">Frame the question, choose the operating mode, set guardrails, and monitor the run in a layout that stays readable on the move.</p>
                     </div>
-                </div>
-
-                <!-- Web Search Toggle -->
-                <div class="setup-section fade-in" style="--delay: 1">
-                    <div class="toggle-row">
-                        <label class="section-label">WEB SEARCH</label>
-                        <label class="toggle">
-                            <input type="checkbox" id="webSearchToggle" checked aria-label="Enable web search">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-desc">Let Box 1 search the web during reasoning</span>
-                    </div>
-                </div>
-
-                <!-- Conflict Detection + Dynamic Spawning Toggles -->
-                <div class="setup-section fade-in" style="--delay: 1.5">
-                    <div class="toggle-row">
-                        <label class="section-label">CONFLICT DETECTION</label>
-                        <label class="toggle">
-                            <input type="checkbox" id="conflictToggle" checked aria-label="Enable conflict detection">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-desc">Auto-detect and debate contradictions between boxes</span>
-                    </div>
-                    <div class="toggle-row" style="margin-top: 12px;">
-                        <label class="section-label">DYNAMIC SPAWNING</label>
-                        <label class="toggle">
-                            <input type="checkbox" id="spawningToggle" checked aria-label="Enable dynamic spawning">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-desc">Let Box 2 create new specialists mid-run</span>
-                    </div>
-                </div>
-
-                <!-- Documents -->
-                <div class="setup-section fade-in" style="--delay: 2">
-                    <label class="section-label">Supporting Documents</label>
-                    <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Upload documents">
-                        <div class="drop-zone-content">
-                            <span class="drop-icon">&#x1F4CE;</span>
-                            <span>Drop documents here or click to upload</span>
+                    <div class="hero-stat-grid">
+                        <div class="hero-stat">
+                            <span class="hero-stat-label">View</span>
+                            <strong class="hero-stat-value">Mobile-optimized</strong>
                         </div>
-                        <input type="file" id="fileInput" multiple hidden>
-                    </div>
-                    <div id="fileList" class="file-list"></div>
-                </div>
-
-                <!-- Seed from Prior Runs -->
-                <div class="setup-section fade-in" style="--delay: 3">
-                    <div class="section-header">
-                        <label class="section-label">SEED FROM PRIOR RUNS</label>
-                        <button id="loadHistoryBtn" class="btn-secondary btn-sm">Browse History</button>
-                    </div>
-                    <div id="seedRunList" class="seed-run-list"></div>
-                </div>
-
-                <!-- Specialists -->
-                <div class="setup-section fade-in" style="--delay: 4">
-                    <div class="section-header">
-                        <label class="section-label">SPECIALISTS</label>
-                        <button id="addSpecialist" class="btn-secondary btn-sm">+ Add</button>
-                    </div>
-                    <div id="specialistList" class="specialist-grid"></div>
-                </div>
-
-                <!-- Specialist Modal -->
-                <div id="specialistModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Add specialist">
-                    <div class="modal-content">
-                        <h3 class="modal-title">Add Specialist</h3>
-                        <div class="modal-presets">
-                            <button class="preset-btn" data-name="Legal Implications" data-desc="Analyze legal ramifications, regulatory compliance, precedent cases, and liability concerns">Legal</button>
-                            <button class="preset-btn" data-name="Technical Feasibility" data-desc="Evaluate technical implementation challenges, architectural constraints, and engineering trade-offs">Technical</button>
-                            <button class="preset-btn" data-name="Ethical Concerns" data-desc="Examine ethical implications, societal impact, fairness, bias, and moral considerations">Ethics</button>
-                            <button class="preset-btn" data-name="Historical Precedent" data-desc="Research historical parallels, past attempts, lessons learned, and pattern recognition">Historical</button>
-                            <button class="preset-btn" data-name="Financial Impact" data-desc="Assess economic implications, cost-benefit analysis, market effects, and financial viability">Financial</button>
-                            <button class="preset-btn" data-name="Risk Analysis" data-desc="Identify risks, failure modes, mitigation strategies, and worst-case scenarios">Risk</button>
+                        <div class="hero-stat">
+                            <span class="hero-stat-label">Engine</span>
+                            <strong class="hero-stat-value">Nested box orchestration</strong>
                         </div>
-                        <div class="modal-form">
-                            <input type="text" id="specialistName" class="input-field" placeholder="Specialist name">
-                            <textarea id="specialistDesc" class="textarea-field" placeholder="Domain focus description..." rows="3"></textarea>
-                            <div class="modal-actions">
-                                <button id="cancelSpecialist" class="btn-ghost">Cancel</button>
-                                <button id="confirmSpecialist" class="btn-primary">Add Specialist</button>
+                        <div class="hero-stat">
+                            <span class="hero-stat-label">Control</span>
+                            <strong class="hero-stat-value">Budget, search, debate</strong>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="hero-stat-label">Output</span>
+                            <strong class="hero-stat-value">Live feed plus reports</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="setup-grid">
+                    <section class="setup-column setup-column-primary">
+                        <section class="setup-card setup-card-primary fade-in" style="--delay: 0.75">
+                            <div class="card-head">
+                                <p class="card-kicker">Mission Brief</p>
+                                <h3 class="card-title">Define the problem and choose how the sandbox should attack it.</h3>
+                                <p class="card-copy">Start with a clear prompt. The portal keeps the first decision point prominent so launching from mobile still feels intentional.</p>
                             </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- History Modal -->
-                <div id="historyModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Run history">
-                    <div class="modal-content modal-lg">
-                        <h3 class="modal-title">Run History</h3>
-                        <div id="historyList" class="history-list"></div>
-                        <div class="modal-actions">
-                            <button id="cancelHistory" class="btn-ghost">Cancel</button>
-                            <button id="confirmHistory" class="btn-primary">Add Selected</button>
-                        </div>
-                    </div>
-                </div>
+                            <div class="setup-stack">
+                                <div class="setup-section">
+                                    <label class="section-label" for="questionInput">Primary Question</label>
+                                    <textarea id="questionInput" class="textarea-main" placeholder="Ask something conventionally impossible..." rows="5"></textarea>
+                                    <p class="section-note">Use one precise question. Add evidence and prior work below if the run needs more grounding.</p>
+                                </div>
 
-                <!-- Budget -->
-                <div class="setup-section fade-in" style="--delay: 5">
-                    <label class="section-label" for="budgetSlider">BUDGET</label>
-                    <div class="budget-slider-container">
-                        <span class="budget-label">$1</span>
-                        <input type="range" id="budgetSlider" min="1" max="50" value="10" step="0.5" class="budget-slider" aria-label="Budget cap in dollars">
-                        <span class="budget-label">$50</span>
-                        <span id="budgetValue" class="budget-value">$10.00</span>
-                    </div>
-                </div>
+                                <div class="setup-section">
+                                    <div class="section-header">
+                                        <p class="section-label">Operating Mode</p>
+                                        <span class="section-badge">3 modes</span>
+                                    </div>
+                                    <div class="mode-selector" id="modeSelector">
+                                        <button class="mode-btn active" data-mode="solve">
+                                            <span class="mode-icon">&#x2692;</span>
+                                            <span class="mode-label">Solve</span>
+                                            <span class="mode-desc">Push toward a defensible answer</span>
+                                        </button>
+                                        <button class="mode-btn" data-mode="explore">
+                                            <span class="mode-icon">&#x2690;</span>
+                                            <span class="mode-label">Explore</span>
+                                            <span class="mode-desc">Map the terrain and learn from failure</span>
+                                        </button>
+                                        <button class="mode-btn" data-mode="freeform">
+                                            <span class="mode-icon">&#x29BF;</span>
+                                            <span class="mode-label">Freeform</span>
+                                            <span class="mode-desc">Let the system adapt its own strategy</span>
+                                        </button>
+                                    </div>
+                                </div>
 
-                <!-- Estimate -->
-                <div class="setup-section fade-in" style="--delay: 6">
-                    <div id="estimateCard" class="estimate-card hidden">
-                        <h3 class="estimate-title">Pre-Run Estimate</h3>
-                        <div id="estimateLoading" class="estimate-loading hidden">
-                            <div class="shimmer-bar"></div>
-                            <div class="shimmer-bar short"></div>
-                        </div>
-                        <div id="estimateContent" class="estimate-content hidden">
-                            <div class="estimate-row">
-                                <span>Complexity</span>
-                                <div class="complexity-dots" id="complexityDots"></div>
+                                <div class="launch-panel">
+                                    <div id="estimateCard" class="estimate-card hidden">
+                                        <h3 class="estimate-title">Pre-Run Estimate</h3>
+                                        <div id="estimateLoading" class="estimate-loading hidden">
+                                            <div class="shimmer-bar"></div>
+                                            <div class="shimmer-bar short"></div>
+                                        </div>
+                                        <div id="estimateContent" class="estimate-content hidden">
+                                            <div class="estimate-row">
+                                                <span>Complexity</span>
+                                                <div class="complexity-dots" id="complexityDots"></div>
+                                            </div>
+                                            <div class="estimate-row">
+                                                <span>Est. cycles</span>
+                                                <span id="estCycles" class="mono">--</span>
+                                            </div>
+                                            <div class="estimate-row">
+                                                <span>Est. cost</span>
+                                                <span id="estCost" class="mono">--</span>
+                                            </div>
+                                            <div id="estimateWarnings" class="estimate-warnings"></div>
+                                        </div>
+                                    </div>
+
+                                    <button id="launchBtn" class="btn-launch" disabled>
+                                        <span class="launch-icon">&#x25B6;</span>
+                                        <span>Launch Sandbox</span>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="estimate-row">
-                                <span>Est. cycles</span>
-                                <span id="estCycles" class="mono">--</span>
-                            </div>
-                            <div class="estimate-row">
-                                <span>Est. cost</span>
-                                <span id="estCost" class="mono">--</span>
-                            </div>
-                            <div id="estimateWarnings" class="estimate-warnings"></div>
-                        </div>
-                    </div>
-                </div>
+                        </section>
 
-                <!-- Launch Button -->
-                <div class="setup-section fade-in" style="--delay: 7">
-                    <button id="launchBtn" class="btn-launch" disabled>
-                        <span class="launch-icon">&#x25B6;</span>
-                        <span>Launch Sandbox</span>
-                    </button>
+                        <section class="setup-card fade-in" style="--delay: 1.5">
+                            <div class="card-head">
+                                <p class="card-kicker">Context Sources</p>
+                                <h3 class="card-title">Bring in the evidence that should shape the run.</h3>
+                            </div>
+
+                            <div class="context-stack">
+                                <div class="context-block">
+                                    <p class="section-label">Supporting Documents</p>
+                                    <p class="section-note">Drop files or tap to upload source material before launch.</p>
+                                    <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Upload documents">
+                                        <div class="drop-zone-content">
+                                            <span class="drop-icon">&#x1F4CE;</span>
+                                            <span>Drop documents here or tap to upload</span>
+                                        </div>
+                                        <input type="file" id="fileInput" multiple hidden>
+                                    </div>
+                                    <div id="fileList" class="file-list"></div>
+                                </div>
+
+                                <div class="context-block">
+                                    <div class="section-header">
+                                        <p class="section-label">Seed From Prior Runs</p>
+                                        <button id="loadHistoryBtn" class="btn-secondary btn-sm">Browse History</button>
+                                    </div>
+                                    <p class="section-note">Reuse previous conclusions or partial attempts when the question has history.</p>
+                                    <div id="seedRunList" class="seed-run-list"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="setup-card fade-in" style="--delay: 2.25">
+                            <div class="section-header">
+                                <div>
+                                    <p class="card-kicker">Specialist Layer</p>
+                                    <h3 class="card-title">Add expert lenses before the run begins.</h3>
+                                </div>
+                                <button id="addSpecialist" class="btn-secondary btn-sm">Add Specialist</button>
+                            </div>
+                            <p class="section-note">Use specialists when you need domain-specific scrutiny like risk, ethics, technical feasibility, or law.</p>
+                            <div id="specialistList" class="specialist-grid"></div>
+                        </section>
+                    </section>
+
+                    <aside class="setup-column setup-column-secondary">
+                        <section class="setup-card settings-card fade-in" style="--delay: 1">
+                            <div class="card-head">
+                                <p class="card-kicker">Run Controls</p>
+                                <h3 class="card-title">Set identity, autonomy, and spend before the boxes start talking.</h3>
+                            </div>
+
+                            <div class="settings-stack">
+                                <div class="setting-group">
+                                    <div class="section-header">
+                                        <p class="section-label">Run Topology</p>
+                                        <span class="section-badge">Base-first</span>
+                                    </div>
+                                    <p class="section-note">Box 1 handles the base case. Add Box 2 only when you want a second-pass amplification layer.</p>
+                                    <div class="stack-selector" id="stackSelector" role="group" aria-label="Run topology">
+                                        <button id="stackBaseBtn" class="stack-btn active" type="button" data-stack="base">
+                                            <span class="stack-btn-title">Base Box</span>
+                                            <span class="stack-btn-copy">Run Box 1 on its own for the cleanest and cheapest base-case answer.</span>
+                                        </button>
+                                        <button id="stackLayeredBtn" class="stack-btn" type="button" data-stack="layered">
+                                            <span class="stack-btn-title">Add Extrapolator</span>
+                                            <span class="stack-btn-copy">Layer Box 2 on top when you want pressure-testing, extensions, and spawn-driven expansion.</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <label class="section-label" for="apiKeyInput">Provider API Key</label>
+                                    <div class="api-key-container">
+                                        <input type="password" id="apiKeyInput" placeholder="OpenAI API Key (optional)" class="input-subtle">
+                                        <button id="apiKeyToggle" class="btn-icon" type="button" title="Toggle visibility" aria-label="Show API key" aria-pressed="false">Show</button>
+                                    </div>
+                                    <p class="section-note">Optional. Leave blank to use the key configured on the server.</p>
+                                </div>
+
+                                <div class="setting-group toggle-stack">
+                                    <div class="toggle-row">
+                                        <div class="toggle-copy">
+                                            <label class="section-label" for="webSearchToggle">Web Search</label>
+                                            <span class="toggle-desc">Let Box 1 verify claims or pull current information during reasoning.</span>
+                                        </div>
+                                        <label class="toggle">
+                                            <input type="checkbox" id="webSearchToggle" checked aria-label="Enable web search">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="toggle-row">
+                                        <div class="toggle-copy">
+                                            <label class="section-label" for="conflictToggle">Conflict Detection</label>
+                                            <span class="toggle-desc">Auto-detect contradictions and force debate when boxes disagree.</span>
+                                        </div>
+                                        <label class="toggle">
+                                            <input type="checkbox" id="conflictToggle" checked aria-label="Enable conflict detection">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="toggle-row">
+                                        <div class="toggle-copy">
+                                            <label class="section-label" for="spawningToggle">Dynamic Spawning</label>
+                                            <span class="toggle-desc">Allow Box 2 to create new specialists when the domain coverage is thin.</span>
+                                        </div>
+                                        <label class="toggle">
+                                            <input type="checkbox" id="spawningToggle" checked aria-label="Enable dynamic spawning">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="section-header">
+                                        <label class="section-label" for="budgetSlider">Budget Cap</label>
+                                        <span id="budgetValue" class="budget-value">$10.00</span>
+                                    </div>
+                                    <p class="section-note">Keep the run bounded. The engine will start concluding as it approaches the cap.</p>
+                                    <div class="budget-slider-container">
+                                        <span class="budget-label">$1</span>
+                                        <input type="range" id="budgetSlider" min="1" max="50" value="10" step="0.5" class="budget-slider" aria-label="Budget cap in dollars">
+                                        <span class="budget-label">$50</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </aside>
                 </div>
             </div>
         </main>
 
-        <!-- Running State -->
         <main id="runningView" class="view view-running hidden">
             <div class="running-layout">
-                <!-- Left Panel: Visualization + Cost -->
                 <div class="panel-left">
-                    <div class="viz-section">
-                        <h2 class="panel-title">NESTED BOX VISUALIZATION</h2>
-                        <div id="boxVisualization" class="box-viz-container">
-                            <!-- Dynamically populated nested boxes -->
+                    <section class="panel-card viz-section">
+                        <div class="panel-heading">
+                            <p class="panel-kicker">Mission Control</p>
+                            <h2 class="panel-title">Nested box activity</h2>
                         </div>
-                    </div>
-                    <div class="cost-section">
-                        <h2 class="panel-title">COST TRACKER</h2>
+                        <div id="boxVisualization" class="box-viz-container">
+                        </div>
+                    </section>
+
+                    <section class="panel-card cost-section">
+                        <div class="panel-heading">
+                            <p class="panel-kicker">Budget Monitor</p>
+                            <h2 class="panel-title">Cost tracker</h2>
+                        </div>
                         <div class="cost-summary">
                             <div class="cost-main">
                                 <span id="costCurrent" class="cost-amount">$0.00</span>
@@ -245,15 +306,17 @@
                         </div>
                         <div id="boxCostBars" class="box-cost-bars"></div>
                         <div id="concludeBanner" class="conclude-banner hidden">
-                            Approaching budget -- boxes wrapping up
+                            Approaching budget. Boxes are wrapping toward conclusion.
                         </div>
-                    </div>
+                    </section>
                 </div>
 
-                <!-- Right Panel: Live Feed -->
-                <div class="panel-right">
+                <section class="panel-right panel-card feed-panel">
                     <div class="feed-header">
-                        <h2 class="panel-title">LIVE FEED</h2>
+                        <div class="panel-heading">
+                            <p class="panel-kicker">Live Trace</p>
+                            <h2 class="panel-title">Reasoning feed</h2>
+                        </div>
                         <div id="feedFilters" class="feed-filters"></div>
                     </div>
                     <div id="liveFeed" class="live-feed" aria-live="polite" aria-relevant="additions"></div>
@@ -261,29 +324,63 @@
                         <input type="text" id="feedInput" class="feed-input" placeholder="Inject context or redirect the reasoning..." autocomplete="off" aria-label="Inject message into reasoning">
                         <button id="feedSendBtn" class="btn-primary btn-sm feed-send-btn">Inject</button>
                     </div>
-                </div>
+                </section>
             </div>
 
-            <!-- Status Bar -->
             <div id="statusBar" class="status-bar">
                 <span id="statusText">Initializing...</span>
             </div>
         </main>
 
-        <!-- Results State -->
         <main id="resultsView" class="view view-results hidden">
-            <div class="results-header">
-                <div class="results-summary">
-                    <h2 id="resultsTitle">RUN COMPLETE</h2>
-                    <div id="resultsSummaryStats" class="results-stats"></div>
+            <div class="results-shell">
+                <div class="results-header">
+                    <div class="results-summary">
+                        <p class="results-kicker">Run Archive</p>
+                        <h2 id="resultsTitle">RUN COMPLETE</h2>
+                        <div id="resultsSummaryStats" class="results-stats"></div>
+                    </div>
+                    <div class="results-actions">
+                        <button id="newRunBtn" class="btn-secondary">New Run</button>
+                        <button id="downloadAllBtn" class="btn-primary">Download All</button>
+                    </div>
                 </div>
-                <div class="results-actions">
-                    <button id="newRunBtn" class="btn-secondary">New Run</button>
-                    <button id="downloadAllBtn" class="btn-primary">Download All</button>
+                <div id="reportCards" class="report-cards"></div>
+            </div>
+        </main>
+
+        <div id="specialistModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Add specialist">
+            <div class="modal-content">
+                <h3 class="modal-title">Add Specialist</h3>
+                <div class="modal-presets">
+                    <button class="preset-btn" data-name="Legal Implications" data-desc="Analyze legal ramifications, regulatory compliance, precedent cases, and liability concerns">Legal</button>
+                    <button class="preset-btn" data-name="Technical Feasibility" data-desc="Evaluate technical implementation challenges, architectural constraints, and engineering trade-offs">Technical</button>
+                    <button class="preset-btn" data-name="Ethical Concerns" data-desc="Examine ethical implications, societal impact, fairness, bias, and moral considerations">Ethics</button>
+                    <button class="preset-btn" data-name="Historical Precedent" data-desc="Research historical parallels, past attempts, lessons learned, and pattern recognition">Historical</button>
+                    <button class="preset-btn" data-name="Financial Impact" data-desc="Assess economic implications, cost-benefit analysis, market effects, and financial viability">Financial</button>
+                    <button class="preset-btn" data-name="Risk Analysis" data-desc="Identify risks, failure modes, mitigation strategies, and worst-case scenarios">Risk</button>
+                </div>
+                <div class="modal-form">
+                    <input type="text" id="specialistName" class="input-field" placeholder="Specialist name">
+                    <textarea id="specialistDesc" class="textarea-field" placeholder="Domain focus description..." rows="3"></textarea>
+                    <div class="modal-actions">
+                        <button id="cancelSpecialist" class="btn-ghost">Cancel</button>
+                        <button id="confirmSpecialist" class="btn-primary">Add Specialist</button>
+                    </div>
                 </div>
             </div>
-            <div id="reportCards" class="report-cards"></div>
-        </main>
+        </div>
+
+        <div id="historyModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Run history">
+            <div class="modal-content modal-lg">
+                <h3 class="modal-title">Run History</h3>
+                <div id="historyList" class="history-list"></div>
+                <div class="modal-actions">
+                    <button id="cancelHistory" class="btn-ghost">Cancel</button>
+                    <button id="confirmHistory" class="btn-primary">Add Selected</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/js/utils.js"></script>

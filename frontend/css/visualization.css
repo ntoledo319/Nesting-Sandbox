@@ -184,6 +184,18 @@
     border-radius: var(--radius-xl);
 }
 
+.viz-base-only {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.viz-outer.base-only {
+    gap: 16px;
+    padding: 28px 18px 18px;
+}
+
 .viz-box2.thinking,
 .viz-middle.box-thinking {
     border-color: var(--box2-color);
@@ -293,6 +305,11 @@
     background: var(--box1-bg);
     position: relative;
     transition: all var(--duration-normal) var(--ease-out);
+}
+
+.viz-inner.viz-standalone {
+    width: min(100%, 360px);
+    min-height: 220px;
 }
 
 .viz-box1.thinking,

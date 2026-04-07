@@ -22,6 +22,7 @@ const App = {
     currentReport: null,
     _fetchResultsRetries: 0,
     mode: 'solve', // 'solve' | 'explore' | 'freeform'
+    enableBox2: false,
     seedRunIds: [],
     seedRuns: [],  // Full run data for display
 
@@ -32,6 +33,7 @@ const App = {
         this.costDisplay.init();
         this.bindEvents();
         this.bindWSHandlers();
+        this.syncRunControls();
     },
 
     /* --------------------------------------------------------
@@ -57,6 +59,12 @@ const App = {
         const fileInput = document.getElementById('fileInput');
 
         dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             dropZone.classList.add('drag-over');
@@ -92,6 +100,7 @@ const App = {
                 this.specialists.push({ name, description: desc });
                 this.renderer.renderSpecialistList(this.specialists);
                 document.getElementById('specialistModal').classList.add('hidden');
+                this.syncRunControls();
                 this.updateLaunchButton();
                 this.requestEstimate();
                 this.bindSpecialistRemove();
@@ -122,7 +131,12 @@ const App = {
         // API key toggle
         document.getElementById('apiKeyToggle').addEventListener('click', () => {
             const input = document.getElementById('apiKeyInput');
-            input.type = input.type === 'password' ? 'text' : 'password';
+            const toggle = document.getElementById('apiKeyToggle');
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            toggle.textContent = isPassword ? 'Hide' : 'Show';
+            toggle.setAttribute('aria-label', isPassword ? 'Hide API key' : 'Show API key');
+            toggle.setAttribute('aria-pressed', String(isPassword));
         });
 
         // Mode selector
@@ -140,6 +154,14 @@ const App = {
                 document.getElementById('questionInput').placeholder = placeholder[this.mode] || placeholder.solve;
                 this.requestEstimate();
             });
+        });
+
+        // Stack selector
+        document.getElementById('stackBaseBtn')?.addEventListener('click', () => {
+            this.setEnableBox2(false);
+        });
+        document.getElementById('stackLayeredBtn')?.addEventListener('click', () => {
+            this.setEnableBox2(true);
         });
 
         // Feed filters (delegated)
@@ -170,6 +192,7 @@ const App = {
                 const name = removeBtn.dataset.name;
                 this.specialists = this.specialists.filter(s => s.name !== name);
                 this.renderer.renderSpecialistList(this.specialists);
+                this.syncRunControls();
                 this.updateLaunchButton();
                 this.requestEstimate();
             }
@@ -192,7 +215,7 @@ const App = {
         // Report card expand/collapse and individual download (delegated)
         document.getElementById('reportCards')?.addEventListener('click', (e) => {
             const header = e.target.closest('.report-card-header');
-            if (header) {
+            if (header && !header.closest('.report-card-summary')) {
                 header.parentElement.classList.toggle('expanded');
             }
 
@@ -236,6 +259,7 @@ const App = {
                 this.seedRunIds = this.seedRunIds.filter(id => id !== runId);
                 this.seedRuns = this.seedRuns.filter(r => r.run_id !== runId);
                 this.renderSeedRuns();
+                this.requestEstimate();
             }
         });
 
@@ -244,14 +268,6 @@ const App = {
             if (e.key === 'Escape') {
                 document.getElementById('specialistModal')?.classList.add('hidden');
                 document.getElementById('historyModal')?.classList.add('hidden');
-            }
-        });
-
-        // Drop zone keyboard accessibility (Enter/Space to open file picker)
-        document.getElementById('dropZone')?.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                document.getElementById('fileInput')?.click();
             }
         });
     },
@@ -329,6 +345,7 @@ const App = {
         });
 
         this.renderSeedRuns();
+        this.requestEstimate();
         modal.classList.add('hidden');
     },
 
@@ -339,6 +356,54 @@ const App = {
         this.seedRuns.forEach(run => {
             container.appendChild(this.renderer.renderSeedRunCard(run));
         });
+    },
+
+    setEnableBox2(enabled, options = {}) {
+        const { refreshEstimate = true } = options;
+        this.enableBox2 = Boolean(enabled);
+
+        const baseBtn = document.getElementById('stackBaseBtn');
+        const layeredBtn = document.getElementById('stackLayeredBtn');
+        if (baseBtn) baseBtn.classList.toggle('active', !this.enableBox2);
+        if (layeredBtn) layeredBtn.classList.toggle('active', this.enableBox2);
+
+        this.syncRunControls();
+        if (refreshEstimate) this.requestEstimate();
+    },
+
+    syncRunControls() {
+        const conflictToggle = document.getElementById('conflictToggle');
+        const spawningToggle = document.getElementById('spawningToggle');
+        const hasMultipleAnalysts = this.enableBox2 || this.specialists.length > 0;
+
+        if (conflictToggle) {
+            conflictToggle.disabled = !hasMultipleAnalysts;
+            conflictToggle.closest('.toggle-row')?.classList.toggle('is-disabled', !hasMultipleAnalysts);
+        }
+
+        if (spawningToggle) {
+            spawningToggle.disabled = !this.enableBox2;
+            spawningToggle.closest('.toggle-row')?.classList.toggle('is-disabled', !this.enableBox2);
+        }
+    },
+
+    buildRunConfigPayload() {
+        const apiKey = document.getElementById('apiKeyInput').value.trim();
+        const hasMultipleAnalysts = this.enableBox2 || this.specialists.length > 0;
+        const payload = {
+            question: document.getElementById('questionInput').value.trim(),
+            documents: this.documentTexts,
+            specialists: this.specialists,
+            enable_box2: this.enableBox2,
+            budget_cap: parseFloat(document.getElementById('budgetSlider').value),
+            mode: this.mode,
+            web_search_enabled: document.getElementById('webSearchToggle')?.checked ?? true,
+            conflict_detection: hasMultipleAnalysts && (document.getElementById('conflictToggle')?.checked ?? true),
+            allow_spawning: this.enableBox2 && (document.getElementById('spawningToggle')?.checked ?? true),
+            seed_run_ids: this.seedRunIds,
+        };
+        if (apiKey) payload.api_key = apiKey;
+        return payload;
     },
 
     /* --------------------------------------------------------
@@ -355,6 +420,7 @@ const App = {
             // Restore mode from server state (handles reconnects)
             if (data.mode) this.mode = data.mode;
             this.boxStates = data.boxes || {};
+            this.enableBox2 = Boolean(this.boxStates.box2);
             if (data.events) {
                 data.events.forEach(e => this.addEvent(e));
             }
@@ -489,19 +555,7 @@ const App = {
         this.renderer.renderEstimate(null); // Show loading
 
         try {
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
-            const body = {
-                question,
-                documents: this.documentTexts,
-                specialists: this.specialists,
-                budget_cap: parseFloat(document.getElementById('budgetSlider').value),
-                mode: this.mode,
-                web_search_enabled: document.getElementById('webSearchToggle')?.checked ?? true,
-                conflict_detection: document.getElementById('conflictToggle')?.checked ?? true,
-                allow_spawning: document.getElementById('spawningToggle')?.checked ?? true,
-                seed_run_ids: this.seedRunIds,
-            };
-            if (apiKey) body.api_key = apiKey;
+            const body = this.buildRunConfigPayload();
 
             const resp = await fetch('/api/estimate', {
                 method: 'POST',
@@ -532,21 +586,8 @@ const App = {
         const launchBtn = document.getElementById('launchBtn');
         if (launchBtn) launchBtn.disabled = true;
 
-        const apiKey = document.getElementById('apiKeyInput').value.trim();
         const budget = parseFloat(document.getElementById('budgetSlider').value);
-
-        const config = {
-            question,
-            documents: this.documentTexts,
-            specialists: this.specialists,
-            budget_cap: budget,
-            mode: this.mode,
-            web_search_enabled: document.getElementById('webSearchToggle')?.checked ?? true,
-            conflict_detection: document.getElementById('conflictToggle')?.checked ?? true,
-            allow_spawning: document.getElementById('spawningToggle')?.checked ?? true,
-            seed_run_ids: this.seedRunIds,
-        };
-        if (apiKey) config.api_key = apiKey;
+        const config = this.buildRunConfigPayload();
 
         try {
             const resp = await fetch('/api/runs', {
@@ -665,6 +706,7 @@ const App = {
         this.currentReport = null;
         this._fetchResultsRetries = 0;
         this.mode = 'solve';
+        this.enableBox2 = false;
         this.seedRunIds = [];
         this.seedRuns = [];
         this.renderer.feedFilter = null;
@@ -679,6 +721,10 @@ const App = {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         const defaultMode = document.querySelector('.mode-btn[data-mode="solve"]');
         if (defaultMode) defaultMode.classList.add('active');
+        document.getElementById('webSearchToggle').checked = true;
+        document.getElementById('conflictToggle').checked = true;
+        document.getElementById('spawningToggle').checked = true;
+        this.setEnableBox2(false, { refreshEstimate: false });
         document.getElementById('questionInput').placeholder = 'Ask something conventionally impossible...';
         this.switchView('setup');
     },
@@ -712,6 +758,7 @@ const App = {
         document.getElementById('setupView').classList.toggle('hidden', view !== 'setup');
         document.getElementById('runningView').classList.toggle('hidden', view !== 'running');
         document.getElementById('resultsView').classList.toggle('hidden', view !== 'results');
+        window.scrollTo(0, 0);
     },
 };
 
