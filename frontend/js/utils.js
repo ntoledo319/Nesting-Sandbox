@@ -40,32 +40,72 @@ function formatNumber(n) {
 
 /**
  * Simple markdown-to-HTML renderer.
- * Supports: headers (h2–h4), bold, italic, inline code, ordered/unordered lists,
+ * Supports: headers (h2-h4), bold, italic, inline code, ordered/unordered lists,
  * paragraph breaks, and line breaks.
  * @param {string} text
  * @returns {string} HTML string
  */
 function renderMarkdown(text) {
     if (!text) return '';
-    let html = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/^### (.+)$/gm, '<h4>$1</h4>')
-        .replace(/^## (.+)$/gm, '<h3>$1</h3>')
-        .replace(/^# (.+)$/gm, '<h2>$1</h2>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    const lines = String(text).replace(/\r/g, '').split('\n');
+    const blocks = [];
+    let paragraph = [];
+    let listItems = [];
+
+    const flushParagraph = () => {
+        if (!paragraph.length) return;
+        const content = paragraph.map(renderInlineMarkdown).join('<br>');
+        blocks.push(`<p>${content}</p>`);
+        paragraph = [];
+    };
+
+    const flushList = () => {
+        if (!listItems.length) return;
+        blocks.push(`<ul>${listItems.map(item => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</ul>`);
+        listItems = [];
+    };
+
+    for (const rawLine of lines) {
+        const line = rawLine.trimEnd();
+        const trimmed = line.trim();
+
+        if (!trimmed) {
+            flushParagraph();
+            flushList();
+            continue;
+        }
+
+        const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
+        if (heading) {
+            flushParagraph();
+            flushList();
+            const level = Math.min(heading[1].length + 1, 4);
+            blocks.push(`<h${level}>${renderInlineMarkdown(heading[2])}</h${level}>`);
+            continue;
+        }
+
+        const listMatch = trimmed.match(/^(?:[-*]|\d+\.)\s+(.+)$/);
+        if (listMatch) {
+            flushParagraph();
+            listItems.push(listMatch[1]);
+            continue;
+        }
+
+        flushList();
+        paragraph.push(trimmed);
+    }
+
+    flushParagraph();
+    flushList();
+
+    return blocks.join('');
+}
+
+function renderInlineMarkdown(text) {
+    return escapeHtml(text)
         .replace(/`([^`]+)`/g, '<code>$1</code>')
-        .replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>')
-        .replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>')
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>');
-    // Wrap consecutive <li> runs in <ul> tags
-    html = html.replace(/((?:<li>.*?<\/li>(?:<br>)?)+)/g, '<ul>$1</ul>');
-    // Clean up stray <br> inside <ul> between list items
-    html = html.replace(/<\/li><br><li>/g, '</li><li>');
-    return '<p>' + html + '</p>';
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 }
 
 /**

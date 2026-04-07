@@ -34,6 +34,7 @@ const App = {
         this.bindEvents();
         this.bindWSHandlers();
         this.syncRunControls();
+        this.updateRunOverview();
     },
 
     /* --------------------------------------------------------
@@ -49,9 +50,28 @@ const App = {
         }, 800));
 
         // Auto-expand textarea
-        questionInput.addEventListener('input', function () {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
+        questionInput.addEventListener('input', () => {
+            this.resizeQuestionInput();
+            this.updateRunOverview();
+        });
+
+        // Prompt presets
+        document.querySelectorAll('.prompt-preset').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const presetQuestion = btn.dataset.prompt || '';
+                const presetMode = btn.dataset.mode || 'solve';
+                const presetStack = btn.dataset.stack || 'base';
+
+                questionInput.value = presetQuestion;
+                this.resizeQuestionInput();
+                this.setMode(presetMode, { refreshEstimate: false });
+                this.setEnableBox2(presetStack === 'layered', { refreshEstimate: false });
+                this.updateLaunchButton();
+                this.updateRunOverview();
+                this.requestEstimate();
+                questionInput.focus();
+                questionInput.setSelectionRange(questionInput.value.length, questionInput.value.length);
+            });
         });
 
         // File upload — drop zone
@@ -101,6 +121,7 @@ const App = {
                 this.renderer.renderSpecialistList(this.specialists);
                 document.getElementById('specialistModal').classList.add('hidden');
                 this.syncRunControls();
+                this.updateRunOverview();
                 this.updateLaunchButton();
                 this.requestEstimate();
                 this.bindSpecialistRemove();
@@ -119,6 +140,7 @@ const App = {
         const slider = document.getElementById('budgetSlider');
         slider.addEventListener('input', () => {
             document.getElementById('budgetValue').textContent = formatCost(parseFloat(slider.value));
+            this.updateRunOverview();
             this.requestEstimate();
         });
 
@@ -142,17 +164,7 @@ const App = {
         // Mode selector
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                this.mode = btn.dataset.mode;
-                // Update placeholder text based on mode
-                const placeholder = {
-                    solve: 'Ask something conventionally impossible...',
-                    explore: 'Pose a problem to explore — the journey IS the output...',
-                    freeform: 'Throw something at the wall and see what sticks...',
-                };
-                document.getElementById('questionInput').placeholder = placeholder[this.mode] || placeholder.solve;
-                this.requestEstimate();
+                this.setMode(btn.dataset.mode);
             });
         });
 
@@ -193,6 +205,7 @@ const App = {
                 this.specialists = this.specialists.filter(s => s.name !== name);
                 this.renderer.renderSpecialistList(this.specialists);
                 this.syncRunControls();
+                this.updateRunOverview();
                 this.updateLaunchButton();
                 this.requestEstimate();
             }
@@ -209,6 +222,7 @@ const App = {
                     this.documentTexts.splice(idx, 1);
                 }
                 this.renderFileList();
+                this.updateRunOverview();
             }
         });
 
@@ -358,6 +372,36 @@ const App = {
         });
     },
 
+    resizeQuestionInput() {
+        const questionInput = document.getElementById('questionInput');
+        if (!questionInput) return;
+        questionInput.style.height = 'auto';
+        questionInput.style.height = questionInput.scrollHeight + 'px';
+    },
+
+    setMode(mode, options = {}) {
+        const { refreshEstimate = true } = options;
+        this.mode = mode;
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+
+        const placeholder = {
+            solve: 'Ask something conventionally impossible...',
+            explore: 'Pose a problem to explore — the journey IS the output...',
+            freeform: 'Throw something at the wall and see what sticks...',
+        };
+
+        const questionInput = document.getElementById('questionInput');
+        if (questionInput) {
+            questionInput.placeholder = placeholder[this.mode] || placeholder.solve;
+        }
+
+        this.updateRunOverview();
+        if (refreshEstimate) this.requestEstimate();
+    },
+
     setEnableBox2(enabled, options = {}) {
         const { refreshEstimate = true } = options;
         this.enableBox2 = Boolean(enabled);
@@ -368,6 +412,7 @@ const App = {
         if (layeredBtn) layeredBtn.classList.toggle('active', this.enableBox2);
 
         this.syncRunControls();
+        this.updateRunOverview();
         if (refreshEstimate) this.requestEstimate();
     },
 
@@ -385,6 +430,36 @@ const App = {
             spawningToggle.disabled = !this.enableBox2;
             spawningToggle.closest('.toggle-row')?.classList.toggle('is-disabled', !this.enableBox2);
         }
+    },
+
+    updateRunOverview() {
+        const questionEl = document.getElementById('activeQuestion');
+        const hintEl = document.getElementById('activeRunHint');
+        const modeEl = document.getElementById('activeModeBadge');
+        const stackEl = document.getElementById('activeStackBadge');
+        const specEl = document.getElementById('activeSpecCount');
+        const docEl = document.getElementById('activeDocCount');
+        const budgetEl = document.getElementById('activeBudget');
+
+        if (!questionEl) return;
+
+        const question = document.getElementById('questionInput')?.value.trim();
+        const budget = parseFloat(document.getElementById('budgetSlider')?.value || '0');
+        const modeLabels = { solve: 'Solve', explore: 'Explore', freeform: 'Freeform' };
+
+        questionEl.textContent = question || 'Waiting for question...';
+
+        if (hintEl) {
+            hintEl.textContent = this.enableBox2
+                ? 'Box 1 establishes the base answer first, then the amplifier layer and specialists can extend or challenge it.'
+                : 'This run is staying on the base box for the clearest first-pass answer and the lowest overhead.';
+        }
+
+        if (modeEl) modeEl.textContent = modeLabels[this.mode] || this.mode;
+        if (stackEl) stackEl.textContent = this.enableBox2 ? 'Layered Run' : 'Base Box Only';
+        if (specEl) specEl.textContent = String(this.specialists.length);
+        if (docEl) docEl.textContent = String(this.documents.length);
+        if (budgetEl) budgetEl.textContent = formatCost(budget);
     },
 
     buildRunConfigPayload() {
@@ -525,6 +600,7 @@ const App = {
             }
         }
         this.renderFileList();
+        this.updateRunOverview();
     },
 
     renderFileList() {
@@ -588,6 +664,7 @@ const App = {
 
         const budget = parseFloat(document.getElementById('budgetSlider').value);
         const config = this.buildRunConfigPayload();
+        this.updateRunOverview();
 
         try {
             const resp = await fetch('/api/runs', {
@@ -717,15 +794,12 @@ const App = {
         document.getElementById('liveFeed').innerHTML = '';
         const seedList = document.getElementById('seedRunList');
         if (seedList) seedList.innerHTML = '';
-        // Reset mode selector UI
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-        const defaultMode = document.querySelector('.mode-btn[data-mode="solve"]');
-        if (defaultMode) defaultMode.classList.add('active');
+        this.setMode('solve', { refreshEstimate: false });
         document.getElementById('webSearchToggle').checked = true;
         document.getElementById('conflictToggle').checked = true;
         document.getElementById('spawningToggle').checked = true;
         this.setEnableBox2(false, { refreshEstimate: false });
-        document.getElementById('questionInput').placeholder = 'Ask something conventionally impossible...';
+        this.updateRunOverview();
         this.switchView('setup');
     },
 

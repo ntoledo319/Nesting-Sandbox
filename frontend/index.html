@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0b1320">
+    <meta name="theme-color" content="#09121a">
     <title>The Nesting Sandbox</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,82 +22,267 @@
             <div class="header-left">
                 <span class="logo" aria-hidden="true">&loz;</span>
                 <div class="brand-copy">
-                    <span class="brand-kicker">Mobile Command Portal</span>
+                    <span class="brand-kicker">Decision Architecture</span>
                     <h1 class="app-title">Nesting Sandbox</h1>
+                    <p class="brand-summary">Base-box-first reasoning with optional layered pressure testing.</p>
                 </div>
             </div>
             <div class="header-right">
-                <span id="headerModeBadge" class="header-mode-badge hidden"></span>
-                <span id="headerCost" class="header-cost hidden"></span>
+                <div class="header-status-cluster">
+                    <span id="headerModeBadge" class="header-mode-badge hidden"></span>
+                    <span id="headerCost" class="header-cost hidden"></span>
+                </div>
                 <button id="headerStop" class="btn-danger hidden" aria-label="Stop run">Stop Run</button>
             </div>
         </header>
 
         <main id="setupView" class="view view-setup">
-            <div class="setup-container portal-shell">
+            <div class="portal-shell">
                 <section class="portal-hero fade-in" style="--delay: 0">
-                    <div class="portal-hero-copy">
-                        <p class="portal-eyebrow">Browser-first mobile workflow</p>
-                        <h2 class="portal-title">Launch layered reasoning from a phone-sized screen without losing control.</h2>
-                        <p class="portal-subtitle">Frame the question, choose the operating mode, set guardrails, and monitor the run in a layout that stays readable on the move.</p>
+                    <div class="hero-grid">
+                        <div class="portal-hero-copy">
+                            <p class="portal-eyebrow">Mobile browser control room</p>
+                            <h2 class="portal-title">Build a question, choose the stack, and launch a run that stays legible under pressure.</h2>
+                            <p class="portal-subtitle">The interface is tuned for one thing: getting from unclear problem to decision-grade output without burying the user in system noise.</p>
+                        </div>
+                        <aside class="hero-panel" aria-label="Product principles">
+                            <p class="hero-panel-label">System Promise</p>
+                            <ul class="hero-panel-list">
+                                <li>Box 1 owns the base case and gives the first defensible answer.</li>
+                                <li>Optional layers exist to challenge, expand, or specialize the base answer.</li>
+                                <li>Budget, context, and trace visibility stay visible from launch through report.</li>
+                            </ul>
+                        </aside>
                     </div>
+
                     <div class="hero-stat-grid">
                         <div class="hero-stat">
-                            <span class="hero-stat-label">View</span>
-                            <strong class="hero-stat-value">Mobile-optimized</strong>
+                            <span class="hero-stat-label">Stack Model</span>
+                            <strong class="hero-stat-value">Base first, then amplify</strong>
                         </div>
                         <div class="hero-stat">
-                            <span class="hero-stat-label">Engine</span>
-                            <strong class="hero-stat-value">Nested box orchestration</strong>
+                            <span class="hero-stat-label">Best For</span>
+                            <strong class="hero-stat-value">Decision briefs and contradiction finding</strong>
                         </div>
                         <div class="hero-stat">
-                            <span class="hero-stat-label">Control</span>
-                            <strong class="hero-stat-value">Budget, search, debate</strong>
+                            <span class="hero-stat-label">Portal Style</span>
+                            <strong class="hero-stat-value">Mobile-first command surface</strong>
                         </div>
                         <div class="hero-stat">
-                            <span class="hero-stat-label">Output</span>
-                            <strong class="hero-stat-value">Live feed plus reports</strong>
+                            <span class="hero-stat-label">Operator Control</span>
+                            <strong class="hero-stat-value">Budget, search, debate, and injection</strong>
                         </div>
                     </div>
+
+                    <section class="prompt-preset-panel" aria-label="Prompt framing presets">
+                        <div class="panel-heading-inline">
+                            <div>
+                                <p class="card-kicker">Prompt Frames</p>
+                                <h3 class="panel-inline-title">Start from a better shape than an empty box.</h3>
+                            </div>
+                            <span class="section-badge">Tap to seed</span>
+                        </div>
+                        <div class="prompt-preset-grid">
+                            <button class="prompt-preset" type="button" data-mode="solve" data-stack="layered" data-prompt="Pressure-test this plan, identify the strongest objections, and tell me whether the base strategy survives serious scrutiny.">
+                                <span class="prompt-preset-title">Pressure-Test A Plan</span>
+                                <span class="prompt-preset-copy">Launch a layered run that hunts for contradictions before recommending a move.</span>
+                            </button>
+                            <button class="prompt-preset" type="button" data-mode="solve" data-stack="base" data-prompt="Given the evidence below, what is the strongest direct answer and what assumptions is it resting on?">
+                                <span class="prompt-preset-title">Direct Answer</span>
+                                <span class="prompt-preset-copy">Use only the base box when you want the cleanest first-pass judgment.</span>
+                            </button>
+                            <button class="prompt-preset" type="button" data-mode="explore" data-stack="layered" data-prompt="Map the opportunity space, the hidden constraints, and the most promising directions worth deeper investigation.">
+                                <span class="prompt-preset-title">Map The Terrain</span>
+                                <span class="prompt-preset-copy">Explore the edges of the question, not just the fastest answer.</span>
+                            </button>
+                            <button class="prompt-preset" type="button" data-mode="freeform" data-stack="layered" data-prompt="Take this impossible-looking question seriously, generate unconventional approaches, and tell me which paths deserve another cycle.">
+                                <span class="prompt-preset-title">Impossible Idea</span>
+                                <span class="prompt-preset-copy">Use the full stack when you need discovery, extension, and weird-but-useful options.</span>
+                            </button>
+                        </div>
+                    </section>
                 </section>
 
                 <div class="setup-grid">
                     <section class="setup-column setup-column-primary">
-                        <section class="setup-card setup-card-primary fade-in" style="--delay: 0.75">
+                        <section class="setup-card setup-card-primary fade-in" style="--delay: 0.6">
                             <div class="card-head">
                                 <p class="card-kicker">Mission Brief</p>
-                                <h3 class="card-title">Define the problem and choose how the sandbox should attack it.</h3>
-                                <p class="card-copy">Start with a clear prompt. The portal keeps the first decision point prominent so launching from mobile still feels intentional.</p>
+                                <h3 class="card-title">Define the problem in the form you want the base box to attack.</h3>
+                                <p class="card-copy">Good runs start with a precise brief. The question here should stand on its own even before you add documents, history, or specialist lenses.</p>
                             </div>
 
                             <div class="setup-stack">
                                 <div class="setup-section">
                                     <label class="section-label" for="questionInput">Primary Question</label>
                                     <textarea id="questionInput" class="textarea-main" placeholder="Ask something conventionally impossible..." rows="5"></textarea>
-                                    <p class="section-note">Use one precise question. Add evidence and prior work below if the run needs more grounding.</p>
+                                    <p class="section-note">Write the question the way you would want a sharp analyst to restate it back to you before they start work.</p>
                                 </div>
 
                                 <div class="setup-section">
                                     <div class="section-header">
-                                        <p class="section-label">Operating Mode</p>
+                                        <div>
+                                            <p class="section-label">Operating Mode</p>
+                                            <p class="section-note">Choose the temperament of the run before you choose its depth.</p>
+                                        </div>
                                         <span class="section-badge">3 modes</span>
                                     </div>
-                                    <div class="mode-selector" id="modeSelector">
-                                        <button class="mode-btn active" data-mode="solve">
+                                    <div class="mode-selector" id="modeSelector" role="group" aria-label="Operating mode">
+                                        <button class="mode-btn active" type="button" data-mode="solve">
                                             <span class="mode-icon">&#x2692;</span>
                                             <span class="mode-label">Solve</span>
-                                            <span class="mode-desc">Push toward a defensible answer</span>
+                                            <span class="mode-desc">Drive toward the strongest direct answer.</span>
                                         </button>
-                                        <button class="mode-btn" data-mode="explore">
+                                        <button class="mode-btn" type="button" data-mode="explore">
                                             <span class="mode-icon">&#x2690;</span>
                                             <span class="mode-label">Explore</span>
-                                            <span class="mode-desc">Map the terrain and learn from failure</span>
+                                            <span class="mode-desc">Map options, constraints, and frontier edges.</span>
                                         </button>
-                                        <button class="mode-btn" data-mode="freeform">
+                                        <button class="mode-btn" type="button" data-mode="freeform">
                                             <span class="mode-icon">&#x29BF;</span>
                                             <span class="mode-label">Freeform</span>
-                                            <span class="mode-desc">Let the system adapt its own strategy</span>
+                                            <span class="mode-desc">Let the system adapt strategy in motion.</span>
                                         </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="setup-card fade-in" style="--delay: 1.05">
+                            <div class="card-head">
+                                <p class="card-kicker">Context Sources</p>
+                                <h3 class="card-title">Ground the run with material the system should not hallucinate past.</h3>
+                                <p class="card-copy">Attach documents for evidence and pull in previous runs when the new question inherits earlier work.</p>
+                            </div>
+
+                            <div class="context-stack">
+                                <div class="context-block">
+                                    <p class="section-label">Supporting Documents</p>
+                                    <p class="section-note">Upload source files directly from the browser. The portal keeps the interaction large enough to work on a phone.</p>
+                                    <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Upload documents">
+                                        <div class="drop-zone-content">
+                                            <span class="drop-icon">&#x1F4CE;</span>
+                                            <div class="drop-zone-copy">
+                                                <strong>Drop documents here</strong>
+                                                <span>or tap to add files</span>
+                                            </div>
+                                        </div>
+                                        <input type="file" id="fileInput" multiple hidden>
+                                    </div>
+                                    <div id="fileList" class="file-list"></div>
+                                </div>
+
+                                <div class="context-block">
+                                    <div class="section-header">
+                                        <div>
+                                            <p class="section-label">Seed From Prior Runs</p>
+                                            <p class="section-note">Carry forward earlier outcomes when a new run is an iteration instead of a reset.</p>
+                                        </div>
+                                        <button id="loadHistoryBtn" class="btn-secondary btn-sm" type="button">Browse History</button>
+                                    </div>
+                                    <div id="seedRunList" class="seed-run-list"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="setup-card fade-in" style="--delay: 1.5">
+                            <div class="section-header">
+                                <div>
+                                    <p class="card-kicker">Specialist Layer</p>
+                                    <h3 class="card-title">Preload the expert lenses you already know you will need.</h3>
+                                    <p class="section-note">Use specialists to add legal, technical, ethical, financial, or risk pressure before the run starts.</p>
+                                </div>
+                                <button id="addSpecialist" class="btn-secondary btn-sm" type="button">Add Specialist</button>
+                            </div>
+                            <div id="specialistList" class="specialist-grid"></div>
+                        </section>
+                    </section>
+
+                    <aside class="setup-column setup-column-secondary">
+                        <section class="setup-card control-rail fade-in" style="--delay: 0.85">
+                            <div class="card-head">
+                                <p class="card-kicker">Launch Rail</p>
+                                <h3 class="card-title">Set topology, autonomy, and spend before the stack goes live.</h3>
+                                <p class="card-copy">Everything here exists to keep the run explainable and bounded once reasoning starts.</p>
+                            </div>
+
+                            <div class="settings-stack">
+                                <div class="setting-group">
+                                    <div class="section-header">
+                                        <div>
+                                            <p class="section-label">Run Topology</p>
+                                            <p class="section-note">Box 1 always handles the base case. Turn on Box 2 only when you want an explicit amplifier layer.</p>
+                                        </div>
+                                        <span class="section-badge">Base-first</span>
+                                    </div>
+                                    <div class="stack-selector" id="stackSelector" role="group" aria-label="Run topology">
+                                        <button id="stackBaseBtn" class="stack-btn active" type="button" data-stack="base">
+                                            <span class="stack-btn-title">Base Box Only</span>
+                                            <span class="stack-btn-copy">Fastest and cleanest route to the first answer.</span>
+                                        </button>
+                                        <button id="stackLayeredBtn" class="stack-btn" type="button" data-stack="layered">
+                                            <span class="stack-btn-title">Add Amplifier</span>
+                                            <span class="stack-btn-copy">Enable Box 2 for second-pass extension, debate, and spawning.</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <label class="section-label" for="apiKeyInput">Provider API Key</label>
+                                    <div class="api-key-container">
+                                        <input type="password" id="apiKeyInput" placeholder="OpenAI API Key (optional)" class="input-subtle">
+                                        <button id="apiKeyToggle" class="btn-icon" type="button" title="Toggle visibility" aria-label="Show API key" aria-pressed="false">Show</button>
+                                    </div>
+                                    <p class="section-note">Leave blank to use the server key. Use a personal key only when you need a different provider credential for this run.</p>
+                                </div>
+
+                                <div class="setting-group toggle-stack">
+                                    <div class="toggle-row">
+                                        <div class="toggle-copy">
+                                            <label class="section-label" for="webSearchToggle">Web Search</label>
+                                            <span class="toggle-desc">Allow live verification and current-state lookup when the question is time-sensitive.</span>
+                                        </div>
+                                        <label class="toggle">
+                                            <input type="checkbox" id="webSearchToggle" checked aria-label="Enable web search">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="toggle-row">
+                                        <div class="toggle-copy">
+                                            <label class="section-label" for="conflictToggle">Conflict Detection</label>
+                                            <span class="toggle-desc">Escalate disagreements into explicit debate instead of silently averaging them out.</span>
+                                        </div>
+                                        <label class="toggle">
+                                            <input type="checkbox" id="conflictToggle" checked aria-label="Enable conflict detection">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="toggle-row">
+                                        <div class="toggle-copy">
+                                            <label class="section-label" for="spawningToggle">Dynamic Spawning</label>
+                                            <span class="toggle-desc">Permit the amplifier layer to create specialists when coverage is obviously thin.</span>
+                                        </div>
+                                        <label class="toggle">
+                                            <input type="checkbox" id="spawningToggle" checked aria-label="Enable dynamic spawning">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="setting-group">
+                                    <div class="section-header">
+                                        <div>
+                                            <label class="section-label" for="budgetSlider">Budget Cap</label>
+                                            <p class="section-note">The engine starts leaning toward conclusion as it approaches this cap.</p>
+                                        </div>
+                                        <span id="budgetValue" class="budget-value">$10.00</span>
+                                    </div>
+                                    <div class="budget-slider-container">
+                                        <span class="budget-label">$1</span>
+                                        <input type="range" id="budgetSlider" min="1" max="50" value="10" step="0.5" class="budget-slider" aria-label="Budget cap in dollars">
+                                        <span class="budget-label">$50</span>
                                     </div>
                                 </div>
 
@@ -133,130 +318,31 @@
                             </div>
                         </section>
 
-                        <section class="setup-card fade-in" style="--delay: 1.5">
+                        <section class="setup-card trust-card fade-in" style="--delay: 1.2">
                             <div class="card-head">
-                                <p class="card-kicker">Context Sources</p>
-                                <h3 class="card-title">Bring in the evidence that should shape the run.</h3>
+                                <p class="card-kicker">Output Shape</p>
+                                <h3 class="card-title">What a good run should hand back to you.</h3>
                             </div>
-
-                            <div class="context-stack">
-                                <div class="context-block">
-                                    <p class="section-label">Supporting Documents</p>
-                                    <p class="section-note">Drop files or tap to upload source material before launch.</p>
-                                    <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Upload documents">
-                                        <div class="drop-zone-content">
-                                            <span class="drop-icon">&#x1F4CE;</span>
-                                            <span>Drop documents here or tap to upload</span>
-                                        </div>
-                                        <input type="file" id="fileInput" multiple hidden>
-                                    </div>
-                                    <div id="fileList" class="file-list"></div>
-                                </div>
-
-                                <div class="context-block">
-                                    <div class="section-header">
-                                        <p class="section-label">Seed From Prior Runs</p>
-                                        <button id="loadHistoryBtn" class="btn-secondary btn-sm">Browse History</button>
-                                    </div>
-                                    <p class="section-note">Reuse previous conclusions or partial attempts when the question has history.</p>
-                                    <div id="seedRunList" class="seed-run-list"></div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="setup-card fade-in" style="--delay: 2.25">
-                            <div class="section-header">
-                                <div>
-                                    <p class="card-kicker">Specialist Layer</p>
-                                    <h3 class="card-title">Add expert lenses before the run begins.</h3>
-                                </div>
-                                <button id="addSpecialist" class="btn-secondary btn-sm">Add Specialist</button>
-                            </div>
-                            <p class="section-note">Use specialists when you need domain-specific scrutiny like risk, ethics, technical feasibility, or law.</p>
-                            <div id="specialistList" class="specialist-grid"></div>
-                        </section>
-                    </section>
-
-                    <aside class="setup-column setup-column-secondary">
-                        <section class="setup-card settings-card fade-in" style="--delay: 1">
-                            <div class="card-head">
-                                <p class="card-kicker">Run Controls</p>
-                                <h3 class="card-title">Set identity, autonomy, and spend before the boxes start talking.</h3>
-                            </div>
-
-                            <div class="settings-stack">
-                                <div class="setting-group">
-                                    <div class="section-header">
-                                        <p class="section-label">Run Topology</p>
-                                        <span class="section-badge">Base-first</span>
-                                    </div>
-                                    <p class="section-note">Box 1 handles the base case. Add Box 2 only when you want a second-pass amplification layer.</p>
-                                    <div class="stack-selector" id="stackSelector" role="group" aria-label="Run topology">
-                                        <button id="stackBaseBtn" class="stack-btn active" type="button" data-stack="base">
-                                            <span class="stack-btn-title">Base Box</span>
-                                            <span class="stack-btn-copy">Run Box 1 on its own for the cleanest and cheapest base-case answer.</span>
-                                        </button>
-                                        <button id="stackLayeredBtn" class="stack-btn" type="button" data-stack="layered">
-                                            <span class="stack-btn-title">Add Extrapolator</span>
-                                            <span class="stack-btn-copy">Layer Box 2 on top when you want pressure-testing, extensions, and spawn-driven expansion.</span>
-                                        </button>
+                            <div class="trust-list">
+                                <div class="trust-item">
+                                    <span class="trust-index">01</span>
+                                    <div>
+                                        <strong>Base answer first</strong>
+                                        <p>Start with Box 1’s clearest conclusion before you read any amplification.</p>
                                     </div>
                                 </div>
-
-                                <div class="setting-group">
-                                    <label class="section-label" for="apiKeyInput">Provider API Key</label>
-                                    <div class="api-key-container">
-                                        <input type="password" id="apiKeyInput" placeholder="OpenAI API Key (optional)" class="input-subtle">
-                                        <button id="apiKeyToggle" class="btn-icon" type="button" title="Toggle visibility" aria-label="Show API key" aria-pressed="false">Show</button>
-                                    </div>
-                                    <p class="section-note">Optional. Leave blank to use the key configured on the server.</p>
-                                </div>
-
-                                <div class="setting-group toggle-stack">
-                                    <div class="toggle-row">
-                                        <div class="toggle-copy">
-                                            <label class="section-label" for="webSearchToggle">Web Search</label>
-                                            <span class="toggle-desc">Let Box 1 verify claims or pull current information during reasoning.</span>
-                                        </div>
-                                        <label class="toggle">
-                                            <input type="checkbox" id="webSearchToggle" checked aria-label="Enable web search">
-                                            <span class="toggle-slider"></span>
-                                        </label>
-                                    </div>
-
-                                    <div class="toggle-row">
-                                        <div class="toggle-copy">
-                                            <label class="section-label" for="conflictToggle">Conflict Detection</label>
-                                            <span class="toggle-desc">Auto-detect contradictions and force debate when boxes disagree.</span>
-                                        </div>
-                                        <label class="toggle">
-                                            <input type="checkbox" id="conflictToggle" checked aria-label="Enable conflict detection">
-                                            <span class="toggle-slider"></span>
-                                        </label>
-                                    </div>
-
-                                    <div class="toggle-row">
-                                        <div class="toggle-copy">
-                                            <label class="section-label" for="spawningToggle">Dynamic Spawning</label>
-                                            <span class="toggle-desc">Allow Box 2 to create new specialists when the domain coverage is thin.</span>
-                                        </div>
-                                        <label class="toggle">
-                                            <input type="checkbox" id="spawningToggle" checked aria-label="Enable dynamic spawning">
-                                            <span class="toggle-slider"></span>
-                                        </label>
+                                <div class="trust-item">
+                                    <span class="trust-index">02</span>
+                                    <div>
+                                        <strong>Explicit pressure points</strong>
+                                        <p>Surface conflicts, objections, and specialist critiques instead of hiding them in the trace.</p>
                                     </div>
                                 </div>
-
-                                <div class="setting-group">
-                                    <div class="section-header">
-                                        <label class="section-label" for="budgetSlider">Budget Cap</label>
-                                        <span id="budgetValue" class="budget-value">$10.00</span>
-                                    </div>
-                                    <p class="section-note">Keep the run bounded. The engine will start concluding as it approaches the cap.</p>
-                                    <div class="budget-slider-container">
-                                        <span class="budget-label">$1</span>
-                                        <input type="range" id="budgetSlider" min="1" max="50" value="10" step="0.5" class="budget-slider" aria-label="Budget cap in dollars">
-                                        <span class="budget-label">$50</span>
+                                <div class="trust-item">
+                                    <span class="trust-index">03</span>
+                                    <div>
+                                        <strong>Budget-aware receipts</strong>
+                                        <p>Every report should show what it cost, what layers ran, and whether the spend changed the answer.</p>
                                     </div>
                                 </div>
                             </div>
@@ -267,68 +353,100 @@
         </main>
 
         <main id="runningView" class="view view-running hidden">
-            <div class="running-layout">
-                <div class="panel-left">
-                    <section class="panel-card viz-section">
-                        <div class="panel-heading">
-                            <p class="panel-kicker">Mission Control</p>
-                            <h2 class="panel-title">Nested box activity</h2>
+            <div class="running-shell">
+                <section class="running-overview panel-card">
+                    <div class="running-overview-copy">
+                        <p class="panel-kicker">Active Mission</p>
+                        <h2 id="activeQuestion" class="running-question">Waiting for question...</h2>
+                        <p id="activeRunHint" class="running-hint">The base box is framing the first answer.</p>
+                    </div>
+                    <div class="running-overview-stats">
+                        <div class="running-chip-stack">
+                            <span id="activeModeBadge" class="overview-pill">Solve</span>
+                            <span id="activeStackBadge" class="overview-pill">Base Box Only</span>
                         </div>
-                        <div id="boxVisualization" class="box-viz-container">
+                        <div class="running-metric-list">
+                            <div class="running-metric">
+                                <span>Specialists</span>
+                                <strong id="activeSpecCount">0</strong>
+                            </div>
+                            <div class="running-metric">
+                                <span>Docs</span>
+                                <strong id="activeDocCount">0</strong>
+                            </div>
+                            <div class="running-metric">
+                                <span>Budget</span>
+                                <strong id="activeBudget">$10.00</strong>
+                            </div>
                         </div>
-                    </section>
+                    </div>
+                </section>
 
-                    <section class="panel-card cost-section">
-                        <div class="panel-heading">
-                            <p class="panel-kicker">Budget Monitor</p>
-                            <h2 class="panel-title">Cost tracker</h2>
-                        </div>
-                        <div class="cost-summary">
-                            <div class="cost-main">
-                                <span id="costCurrent" class="cost-amount">$0.00</span>
-                                <span class="cost-separator">/</span>
-                                <span id="costBudget" class="cost-budget">$10.00</span>
+                <div class="running-layout">
+                    <div class="panel-left">
+                        <section class="panel-card viz-section">
+                            <div class="panel-heading">
+                                <p class="panel-kicker">Mission Control</p>
+                                <h2 class="panel-title">Nested box activity</h2>
+                                <p class="panel-copy">Watch the base box, amplifier, and specialists move through the run without losing the structure of the stack.</p>
                             </div>
-                            <span id="costPct" class="cost-pct">0%</span>
-                        </div>
-                        <div class="cost-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Budget usage">
-                            <div id="costBar" class="cost-bar" style="width: 0%"></div>
-                        </div>
-                        <div class="cost-details">
-                            <div class="cost-detail-row">
-                                <span>Burn rate</span>
-                                <span id="burnRate" class="mono">$0.00/min</span>
+                            <div id="boxVisualization" class="box-viz-container"></div>
+                        </section>
+
+                        <section class="panel-card cost-section">
+                            <div class="panel-heading">
+                                <p class="panel-kicker">Budget Monitor</p>
+                                <h2 class="panel-title">Cost tracker</h2>
+                                <p class="panel-copy">The system stays transparent about burn rate, projected spend, and per-box consumption.</p>
                             </div>
-                            <div class="cost-detail-row">
-                                <span>Projected</span>
-                                <span id="projectedCost" class="mono">$0.00</span>
+                            <div class="cost-summary">
+                                <div class="cost-main">
+                                    <span id="costCurrent" class="cost-amount">$0.00</span>
+                                    <span class="cost-separator">/</span>
+                                    <span id="costBudget" class="cost-budget">$10.00</span>
+                                </div>
+                                <span id="costPct" class="cost-pct">0%</span>
                             </div>
+                            <div class="cost-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Budget usage">
+                                <div id="costBar" class="cost-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="cost-details">
+                                <div class="cost-detail-row">
+                                    <span>Burn rate</span>
+                                    <span id="burnRate" class="mono">$0.00/min</span>
+                                </div>
+                                <div class="cost-detail-row">
+                                    <span>Projected</span>
+                                    <span id="projectedCost" class="mono">$0.00</span>
+                                </div>
+                            </div>
+                            <div id="boxCostBars" class="box-cost-bars"></div>
+                            <div id="concludeBanner" class="conclude-banner hidden">
+                                Approaching budget. Boxes are wrapping toward conclusion.
+                            </div>
+                        </section>
+                    </div>
+
+                    <section class="panel-right panel-card feed-panel">
+                        <div class="feed-header">
+                            <div class="panel-heading">
+                                <p class="panel-kicker">Live Trace</p>
+                                <h2 class="panel-title">Reasoning feed</h2>
+                                <p class="panel-copy">Follow only the signals that matter, then inject new context when the run needs steering.</p>
+                            </div>
+                            <div id="feedFilters" class="feed-filters"></div>
                         </div>
-                        <div id="boxCostBars" class="box-cost-bars"></div>
-                        <div id="concludeBanner" class="conclude-banner hidden">
-                            Approaching budget. Boxes are wrapping toward conclusion.
+                        <div id="liveFeed" class="live-feed" aria-live="polite" aria-relevant="additions"></div>
+                        <div class="feed-input-bar" id="feedInputBar">
+                            <input type="text" id="feedInput" class="feed-input" placeholder="Inject context or redirect the reasoning..." autocomplete="off" aria-label="Inject message into reasoning">
+                            <button id="feedSendBtn" class="btn-primary btn-sm feed-send-btn" type="button">Inject</button>
                         </div>
                     </section>
                 </div>
 
-                <section class="panel-right panel-card feed-panel">
-                    <div class="feed-header">
-                        <div class="panel-heading">
-                            <p class="panel-kicker">Live Trace</p>
-                            <h2 class="panel-title">Reasoning feed</h2>
-                        </div>
-                        <div id="feedFilters" class="feed-filters"></div>
-                    </div>
-                    <div id="liveFeed" class="live-feed" aria-live="polite" aria-relevant="additions"></div>
-                    <div class="feed-input-bar" id="feedInputBar">
-                        <input type="text" id="feedInput" class="feed-input" placeholder="Inject context or redirect the reasoning..." autocomplete="off" aria-label="Inject message into reasoning">
-                        <button id="feedSendBtn" class="btn-primary btn-sm feed-send-btn">Inject</button>
-                    </div>
-                </section>
-            </div>
-
-            <div id="statusBar" class="status-bar">
-                <span id="statusText">Initializing...</span>
+                <div id="statusBar" class="status-bar">
+                    <span id="statusText">Initializing...</span>
+                </div>
             </div>
         </main>
 
@@ -338,11 +456,12 @@
                     <div class="results-summary">
                         <p class="results-kicker">Run Archive</p>
                         <h2 id="resultsTitle">RUN COMPLETE</h2>
+                        <p class="results-lead">Start with the base-box outcome, then inspect what extra layers changed, challenged, or clarified.</p>
                         <div id="resultsSummaryStats" class="results-stats"></div>
                     </div>
                     <div class="results-actions">
-                        <button id="newRunBtn" class="btn-secondary">New Run</button>
-                        <button id="downloadAllBtn" class="btn-primary">Download All</button>
+                        <button id="newRunBtn" class="btn-secondary" type="button">New Run</button>
+                        <button id="downloadAllBtn" class="btn-primary" type="button">Download All</button>
                     </div>
                 </div>
                 <div id="reportCards" class="report-cards"></div>
@@ -352,20 +471,21 @@
         <div id="specialistModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Add specialist">
             <div class="modal-content">
                 <h3 class="modal-title">Add Specialist</h3>
+                <p class="modal-copy">Preconfigure a lens you want active before the system begins reasoning.</p>
                 <div class="modal-presets">
-                    <button class="preset-btn" data-name="Legal Implications" data-desc="Analyze legal ramifications, regulatory compliance, precedent cases, and liability concerns">Legal</button>
-                    <button class="preset-btn" data-name="Technical Feasibility" data-desc="Evaluate technical implementation challenges, architectural constraints, and engineering trade-offs">Technical</button>
-                    <button class="preset-btn" data-name="Ethical Concerns" data-desc="Examine ethical implications, societal impact, fairness, bias, and moral considerations">Ethics</button>
-                    <button class="preset-btn" data-name="Historical Precedent" data-desc="Research historical parallels, past attempts, lessons learned, and pattern recognition">Historical</button>
-                    <button class="preset-btn" data-name="Financial Impact" data-desc="Assess economic implications, cost-benefit analysis, market effects, and financial viability">Financial</button>
-                    <button class="preset-btn" data-name="Risk Analysis" data-desc="Identify risks, failure modes, mitigation strategies, and worst-case scenarios">Risk</button>
+                    <button class="preset-btn" type="button" data-name="Legal Implications" data-desc="Analyze legal ramifications, regulatory compliance, precedent cases, and liability concerns">Legal</button>
+                    <button class="preset-btn" type="button" data-name="Technical Feasibility" data-desc="Evaluate technical implementation challenges, architectural constraints, and engineering trade-offs">Technical</button>
+                    <button class="preset-btn" type="button" data-name="Ethical Concerns" data-desc="Examine ethical implications, societal impact, fairness, bias, and moral considerations">Ethics</button>
+                    <button class="preset-btn" type="button" data-name="Historical Precedent" data-desc="Research historical parallels, past attempts, lessons learned, and pattern recognition">Historical</button>
+                    <button class="preset-btn" type="button" data-name="Financial Impact" data-desc="Assess economic implications, cost-benefit analysis, market effects, and financial viability">Financial</button>
+                    <button class="preset-btn" type="button" data-name="Risk Analysis" data-desc="Identify risks, failure modes, mitigation strategies, and worst-case scenarios">Risk</button>
                 </div>
                 <div class="modal-form">
                     <input type="text" id="specialistName" class="input-field" placeholder="Specialist name">
                     <textarea id="specialistDesc" class="textarea-field" placeholder="Domain focus description..." rows="3"></textarea>
                     <div class="modal-actions">
-                        <button id="cancelSpecialist" class="btn-ghost">Cancel</button>
-                        <button id="confirmSpecialist" class="btn-primary">Add Specialist</button>
+                        <button id="cancelSpecialist" class="btn-ghost" type="button">Cancel</button>
+                        <button id="confirmSpecialist" class="btn-primary" type="button">Add Specialist</button>
                     </div>
                 </div>
             </div>
@@ -374,10 +494,11 @@
         <div id="historyModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Run history">
             <div class="modal-content modal-lg">
                 <h3 class="modal-title">Run History</h3>
+                <p class="modal-copy">Select previous runs whose outputs should seed the next one.</p>
                 <div id="historyList" class="history-list"></div>
                 <div class="modal-actions">
-                    <button id="cancelHistory" class="btn-ghost">Cancel</button>
-                    <button id="confirmHistory" class="btn-primary">Add Selected</button>
+                    <button id="cancelHistory" class="btn-ghost" type="button">Cancel</button>
+                    <button id="confirmHistory" class="btn-primary" type="button">Add Selected</button>
                 </div>
             </div>
         </div>

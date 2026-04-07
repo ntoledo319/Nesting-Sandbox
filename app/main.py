@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from app.config import settings
 from app.routes import runs, ws, reports, history
 from app.engine.run_manager import RunManager
 
